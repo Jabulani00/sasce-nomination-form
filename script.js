@@ -629,7 +629,40 @@ class NominationForm {
 // Initialize the form when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.nominationFormInstance = new NominationForm();
+    initCountdownTimer();
 });
+
+// Countdown Timer Function
+function initCountdownTimer() {
+    // Set the target date to November 14, 2025
+    const targetDate = new Date('2025-11-14T23:59:59').getTime();
+    
+    function updateCountdown() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+        
+        // Calculate time units
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        
+        // Update the display
+        document.getElementById('days').textContent = String(days).padStart(2, '0');
+        document.getElementById('hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+        
+        // If countdown is over
+        if (distance < 0) {
+            document.getElementById('countdownDisplay').innerHTML = '<div style="text-align: center; font-size: 1.5rem; opacity: 0.9;">Nominations have closed</div>';
+        }
+    }
+    
+    // Update immediately and then every second
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+}
 
 // Add some utility functions for better UX
 document.addEventListener('DOMContentLoaded', () => {
