@@ -2,7 +2,7 @@
 class NominationForm {
     constructor() {
         this.currentSection = 1;
-        this.totalSections = 9;
+        this.totalSections = 6;
         this.formData = {};
         this.nominations = []; // Array to store multiple nominations
         this.selectedNominationIndex = -1;
@@ -28,10 +28,8 @@ class NominationForm {
         
         // File upload previews
         document.getElementById('profilePicture').addEventListener('change', (e) => this.handleFilePreview(e, 'profilePreview'));
-        document.getElementById('cvBioFile').addEventListener('change', (e) => this.handleFilePreview(e, 'cvFilePreview'));
         
         // CV/Bio validation - ensure at least one is provided
-        document.getElementById('cvBioFile').addEventListener('change', () => this.validateCvBioInputs());
         document.getElementById('cvBioText').addEventListener('input', () => this.validateCvBioInputs());
         document.getElementById('cvBioLink').addEventListener('input', () => this.validateCvBioInputs());
         
@@ -96,25 +94,24 @@ class NominationForm {
         });
         
         // Special validation for specific sections
-        if (this.currentSection === 4) {
+        if (this.currentSection === 6) {
             // Validate CV/Bio inputs - at least one must be provided
             if (!this.validateCvBioInputs()) {
                 isValid = false;
             }
-        }
-        
-        if (this.currentSection === 6) {
-            const selfNomination = document.querySelector('input[name="selfNomination"]:checked');
-            if (!selfNomination) {
-                this.showSectionError('Please select whether you are nominating yourself');
+            
+            // Validate infrastructure support question
+            const infrastructureSupport = document.querySelector('input[name="infrastructureSupport"]:checked');
+            if (!infrastructureSupport) {
+                this.showSectionError('Please indicate if the person has infrastructure to support system in executive role');
                 isValid = false;
             }
         }
         
-        if (this.currentSection === 8) {
-            const acceptance = document.getElementById('nomineeAcceptance');
-            if (!acceptance.checked) {
-                this.showSectionError('You must accept the nomination terms to continue');
+        if (this.currentSection === 5) {
+            const selfNomination = document.querySelector('input[name="selfNomination"]:checked');
+            if (!selfNomination) {
+                this.showSectionError('Please select whether you are nominating yourself');
                 isValid = false;
             }
         }
@@ -255,20 +252,17 @@ class NominationForm {
     }
 
     validateCvBioInputs() {
-        const cvBioFile = document.getElementById('cvBioFile').files[0];
         const cvBioText = document.getElementById('cvBioText').value.trim();
         const cvBioLink = document.getElementById('cvBioLink').value.trim();
         
         // At least one must be provided
-        if (!cvBioFile && !cvBioText && !cvBioLink) {
-            this.showFieldError(document.getElementById('cvBioFile'), 'Please provide at least one option: file upload, text, or link');
-            this.showFieldError(document.getElementById('cvBioText'), 'Please provide at least one option: file upload, text, or link');
-            this.showFieldError(document.getElementById('cvBioLink'), 'Please provide at least one option: file upload, text, or link');
+        if (!cvBioText && !cvBioLink) {
+            this.showFieldError(document.getElementById('cvBioText'), 'Please provide at least one option: text or link');
+            this.showFieldError(document.getElementById('cvBioLink'), 'Please provide at least one option: text or link');
             return false;
         }
         
         // Clear any existing errors
-        this.clearFieldError(document.getElementById('cvBioFile'));
         this.clearFieldError(document.getElementById('cvBioText'));
         this.clearFieldError(document.getElementById('cvBioLink'));
         
@@ -307,16 +301,11 @@ class NominationForm {
         
         // Add file information
         const profilePicture = document.getElementById('profilePicture').files[0];
-        const cvBioFile = document.getElementById('cvBioFile').files[0];
         const cvBioText = document.getElementById('cvBioText').value.trim();
         const cvBioLink = document.getElementById('cvBioLink').value.trim();
         
         if (profilePicture) {
             data.profilePictureFile = profilePicture;
-        }
-        
-        if (cvBioFile) {
-            data.cvBioFile = cvBioFile;
         }
         
         if (cvBioText) {
@@ -347,12 +336,6 @@ class NominationForm {
                 formData.profilePictureBase64 = await this.fileToBase64(formData.profilePictureFile);
                 formData.profilePictureFileName = formData.profilePictureFile.name;
                 formData.profilePictureFileType = formData.profilePictureFile.type;
-            }
-            
-            if (formData.cvBioFile) {
-                formData.cvBioBase64 = await this.fileToBase64(formData.cvBioFile);
-                formData.cvBioFileName = formData.cvBioFile.name;
-                formData.cvBioFileType = formData.cvBioFile.type;
             }
             
             // Add nomination to the array
@@ -416,7 +399,7 @@ class NominationForm {
         const nominationsRef = collection(db, 'nominations');
         
         // Remove file objects before saving to Firestore (keep base64 data, text, and link)
-        const { profilePictureFile, cvBioFile, ...firestoreData } = data;
+        const { profilePictureFile, ...firestoreData } = data;
         
         // Create a clean object with only Firestore-compatible data
         const cleanData = {
@@ -445,7 +428,6 @@ class NominationForm {
         
         // Clear file previews
         document.getElementById('profilePreview').classList.remove('show');
-        document.getElementById('cvFilePreview').classList.remove('show');
         
         // Clear any error messages
         this.clearErrorMessages();
@@ -576,9 +558,7 @@ class NominationForm {
         }
         
         // Handle checkboxes
-        if (nomination.nomineeAcceptance) {
-            document.getElementById('nomineeAcceptance').checked = true;
-        }
+        // Note: nomineeAcceptance section was removed
         
         // Update acceptance text
         this.updateAcceptanceText();
