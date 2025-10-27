@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Election Results – 2025</title>
+    <link rel="stylesheet" href="results-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="results-container">
+        <header class="results-header">
+            <h1><i class="fas fa-chart-bar"></i> SASCE Election Results – 2025</h1>
+            <p class="subtitle">Live election results and voting statistics</p>
+            <div class="election-status">
+                <span class="status-indicator" id="electionStatus">Loading...</span>
+                <span class="last-updated" id="lastUpdated">Last updated: --</span>
+            </div>
+        </header>
+
+        <!-- Election Statistics -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalVoters">0</h3>
+                    <p>Total Voters</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-vote-yea"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalVotes">0</h3>
+                    <p>Total Votes Cast</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="voterTurnout">0%</h3>
+                    <p>Voter Turnout</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="electionDuration">--</h3>
+                    <p>Election Duration</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results by Position -->
+        <section class="results-section">
+            <h2><i class="fas fa-trophy"></i> Election Results by Position</h2>
+            
+            <!-- President Results -->
+            <div class="position-results" id="president-results">
+                <div class="position-header">
+                    <h3><i class="fas fa-crown"></i> President</h3>
+                    <div class="position-stats">
+                        <span class="total-candidates">Candidates: <span id="president-candidate-count">0</span></span>
+                        <span class="total-votes">Votes: <span id="president-vote-count">0</span></span>
+                    </div>
+                </div>
+                <div class="candidates-results" id="president-candidates-results">
+                    <div class="loading-results">
+                        <i class="fas fa-spinner fa-spin"></i> Loading results...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deputy President Results -->
+            <div class="position-results" id="deputy-president-results">
+                <div class="position-header">
+                    <h3><i class="fas fa-user-tie"></i> Deputy President</h3>
+                    <div class="position-stats">
+                        <span class="total-candidates">Candidates: <span id="deputy-president-candidate-count">0</span></span>
+                        <span class="total-votes">Votes: <span id="deputy-president-vote-count">0</span></span>
+                    </div>
+                </div>
+                <div class="candidates-results" id="deputy-president-candidates-results">
+                    <div class="loading-results">
+                        <i class="fas fa-spinner fa-spin"></i> Loading results...
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Secretary Results -->
+            <div class="position-results" id="general-secretary-results">
+                <div class="position-header">
+                    <h3><i class="fas fa-file-alt"></i> General Secretary</h3>
+                    <div class="position-stats">
+                        <span class="total-candidates">Candidates: <span id="general-secretary-candidate-count">0</span></span>
+                        <span class="total-votes">Votes: <span id="general-secretary-vote-count">0</span></span>
+                    </div>
+                </div>
+                <div class="candidates-results" id="general-secretary-candidates-results">
+                    <div class="loading-results">
+                        <i class="fas fa-spinner fa-spin"></i> Loading results...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deputy General Secretary Results -->
+            <div class="position-results" id="deputy-general-secretary-results">
+                <div class="position-header">
+                    <h3><i class="fas fa-file-signature"></i> Deputy General Secretary</h3>
+                    <div class="position-stats">
+                        <span class="total-candidates">Candidates: <span id="deputy-general-secretary-candidate-count">0</span></span>
+                        <span class="total-votes">Votes: <span id="deputy-general-secretary-vote-count">0</span></span>
+                    </div>
+                </div>
+                <div class="candidates-results" id="deputy-general-secretary-candidates-results">
+                    <div class="loading-results">
+                        <i class="fas fa-spinner fa-spin"></i> Loading results...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treasurer Results -->
+            <div class="position-results" id="treasurer-results">
+                <div class="position-header">
+                    <h3><i class="fas fa-coins"></i> Treasurer</h3>
+                    <div class="position-stats">
+                        <span class="total-candidates">Candidates: <span id="treasurer-candidate-count">0</span></span>
+                        <span class="total-votes">Votes: <span id="treasurer-vote-count">0</span></span>
+                    </div>
+                </div>
+                <div class="candidates-results" id="treasurer-candidates-results">
+                    <div class="loading-results">
+                        <i class="fas fa-spinner fa-spin"></i> Loading results...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deputy Treasurer Results -->
+            <div class="position-results" id="deputy-treasurer-results">
+                <div class="position-header">
+                    <h3><i class="fas fa-wallet"></i> Deputy Treasurer</h3>
+                    <div class="position-stats">
+                        <span class="total-candidates">Candidates: <span id="deputy-treasurer-candidate-count">0</span></span>
+                        <span class="total-votes">Votes: <span id="deputy-treasurer-vote-count">0</span></span>
+                    </div>
+                </div>
+                <div class="candidates-results" id="deputy-treasurer-candidates-results">
+                    <div class="loading-results">
+                        <i class="fas fa-spinner fa-spin"></i> Loading results...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Voting Timeline -->
+        <section class="timeline-section">
+            <h2><i class="fas fa-history"></i> Voting Timeline</h2>
+            <div class="timeline-container" id="votingTimeline">
+                <div class="loading-timeline">
+                    <i class="fas fa-spinner fa-spin"></i> Loading voting timeline...
+                </div>
+            </div>
+        </section>
+
+        <!-- Export Controls -->
+        <section class="export-section">
+            <h2><i class="fas fa-download"></i> Export Results</h2>
+            <div class="export-controls">
+                <button id="exportResultsBtn" class="btn btn-primary">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+                <button id="exportPDFBtn" class="btn btn-danger">
+                    <i class="fas fa-file-pdf"></i> Export to PDF
+                </button>
+                <button id="refreshResultsBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh Results
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading election results...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    </script>
+
+    <!-- Excel Export Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="results-script.js"></script>
+</body>
+</html>

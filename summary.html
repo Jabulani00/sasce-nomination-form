@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Election Summary & Vote Counting</title>
+    <link rel="stylesheet" href="summary-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="summary-container">
+        <header class="summary-header">
+            <h1><i class="fas fa-chart-pie"></i> SASCE Election Summary & Vote Counting</h1>
+            <p class="subtitle">Comprehensive election statistics and vote counting dashboard</p>
+            <div class="election-info">
+                <span class="election-status" id="electionStatus">Loading...</span>
+                <span class="last-updated" id="lastUpdated">Last updated: --</span>
+            </div>
+        </header>
+
+        <!-- Quick Stats -->
+        <section class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalVoters">0</h3>
+                    <p>Total Voters</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-vote-yea"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalVotes">0</h3>
+                    <p>Total Votes Cast</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="voterTurnout">0%</h3>
+                    <p>Voter Turnout</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="approvedCandidates">0</h3>
+                    <p>Approved Candidates</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vote Counting by Position -->
+        <section class="vote-counting">
+            <h2><i class="fas fa-calculator"></i> Vote Counting by Position</h2>
+            
+            <div class="positions-grid">
+                <!-- President -->
+                <div class="position-counting" id="president-counting">
+                    <div class="position-header">
+                        <h3><i class="fas fa-crown"></i> President</h3>
+                        <div class="position-stats">
+                            <span class="total-votes">Total Votes: <span id="president-total-votes">0</span></span>
+                        </div>
+                    </div>
+                    <div class="candidates-counting" id="president-candidates-counting">
+                        <div class="loading-counting">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vote counts...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deputy President -->
+                <div class="position-counting" id="deputy-president-counting">
+                    <div class="position-header">
+                        <h3><i class="fas fa-user-tie"></i> Deputy President</h3>
+                        <div class="position-stats">
+                            <span class="total-votes">Total Votes: <span id="deputy-president-total-votes">0</span></span>
+                        </div>
+                    </div>
+                    <div class="candidates-counting" id="deputy-president-candidates-counting">
+                        <div class="loading-counting">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vote counts...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Secretary -->
+                <div class="position-counting" id="general-secretary-counting">
+                    <div class="position-header">
+                        <h3><i class="fas fa-file-alt"></i> General Secretary</h3>
+                        <div class="position-stats">
+                            <span class="total-votes">Total Votes: <span id="general-secretary-total-votes">0</span></span>
+                        </div>
+                    </div>
+                    <div class="candidates-counting" id="general-secretary-candidates-counting">
+                        <div class="loading-counting">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vote counts...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deputy General Secretary -->
+                <div class="position-counting" id="deputy-general-secretary-counting">
+                    <div class="position-header">
+                        <h3><i class="fas fa-file-signature"></i> Deputy General Secretary</h3>
+                        <div class="position-stats">
+                            <span class="total-votes">Total Votes: <span id="deputy-general-secretary-total-votes">0</span></span>
+                        </div>
+                    </div>
+                    <div class="candidates-counting" id="deputy-general-secretary-candidates-counting">
+                        <div class="loading-counting">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vote counts...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treasurer -->
+                <div class="position-counting" id="treasurer-counting">
+                    <div class="position-header">
+                        <h3><i class="fas fa-coins"></i> Treasurer</h3>
+                        <div class="position-stats">
+                            <span class="total-votes">Total Votes: <span id="treasurer-total-votes">0</span></span>
+                        </div>
+                    </div>
+                    <div class="candidates-counting" id="treasurer-candidates-counting">
+                        <div class="loading-counting">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vote counts...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deputy Treasurer -->
+                <div class="position-counting" id="deputy-treasurer-counting">
+                    <div class="position-header">
+                        <h3><i class="fas fa-wallet"></i> Deputy Treasurer</h3>
+                        <div class="position-stats">
+                            <span class="total-votes">Total Votes: <span id="deputy-treasurer-total-votes">0</span></span>
+                        </div>
+                    </div>
+                    <div class="candidates-counting" id="deputy-treasurer-candidates-counting">
+                        <div class="loading-counting">
+                            <i class="fas fa-spinner fa-spin"></i> Loading vote counts...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Voter List -->
+        <section class="voter-list">
+            <h2><i class="fas fa-list"></i> Voter List</h2>
+            <div class="voter-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="voterSearch" placeholder="Search voters...">
+                </div>
+                <div class="filter-controls">
+                    <select id="voterFilter">
+                        <option value="">All Voters</option>
+                        <option value="voted">Voted</option>
+                        <option value="not-voted">Not Voted</option>
+                    </select>
+                </div>
+            </div>
+            <div class="voters-table-container">
+                <table id="votersTable" class="voters-table">
+                    <thead>
+                        <tr>
+                            <th>Voter Name</th>
+                            <th>Email</th>
+                            <th>Membership</th>
+                            <th>Vote Status</th>
+                            <th>Voted At</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="votersTableBody">
+                        <tr>
+                            <td colspan="6" class="loading-row">
+                                <i class="fas fa-spinner fa-spin"></i> Loading voters...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Export Controls -->
+        <section class="export-section">
+            <h2><i class="fas fa-download"></i> Export Data</h2>
+            <div class="export-controls">
+                <button id="exportVotersBtn" class="btn btn-primary">
+                    <i class="fas fa-file-excel"></i> Export Voters
+                </button>
+                <button id="exportResultsBtn" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export Results
+                </button>
+                <button id="refreshDataBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh Data
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading election data...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    </script>
+
+    <!-- Excel Export Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="summary-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Nominations Admin Panel</title>
+    <link rel="stylesheet" href="admin-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1><i class="fas fa-users-cog"></i> SASCE Nominations Admin Panel</h1>
+            <p class="subtitle">Manage and review all submitted nominations for the 2025 Election</p>
+        </header>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <div class="search-controls">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search nominations...">
+                </div>
+                <div class="filter-controls">
+                    <select id="positionFilter">
+                        <option value="">All Positions</option>
+                        <option value="president">President</option>
+                        <option value="deputy-president">Deputy President</option>
+                        <option value="general-secretary">General Secretary</option>
+                        <option value="deputy-general-secretary">Deputy General Secretary</option>
+                        <option value="treasurer">Treasurer</option>
+                        <option value="deputy-treasurer">Deputy Treasurer</option>
+                    </select>
+                    <select id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+            </div>
+            <div class="action-controls">
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button id="exportExcelBtn" class="btn btn-success">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalNominations">0</h3>
+                    <p>Total Nominations</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="pendingNominations">0</h3>
+                    <p>Pending Review</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="approvedNominations">0</h3>
+                    <p>Approved</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="rejectedNominations">0</h3>
+                    <p>Rejected</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nominations Table -->
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-table"></i> Nominations Overview</h3>
+                <div class="table-info">
+                    <span id="tableInfo">Loading nominations...</span>
+                </div>
+            </div>
+            
+            <div class="table-wrapper">
+                <table id="nominationsTable" class="nominations-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Position</th>
+                            <th>Organization</th>
+                            <th>Job Title</th>
+                            <th>Self Nomination</th>
+                            <th>Nominator</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td colspan="10" class="loading-row">
+                                <i class="fas fa-spinner fa-spin"></i> Loading nominations...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Nomination Detail Modal -->
+        <div id="nominationModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user"></i> Nomination Details</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body" id="modalBody">
+                    <!-- Nomination details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button id="approveBtn" class="btn btn-success">Approve</button>
+                    <button id="rejectBtn" class="btn btn-danger">Reject</button>
+                    <button id="closeModalBtn" class="btn btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    </script>
+
+    <!-- Excel Export Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="admin-script.js"></script>
+</body>
+</html>

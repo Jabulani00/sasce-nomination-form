@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Nomination Form – 2025 Election of Office Bearers</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="form-header">
+            <div class="logo-container">
+                <img src="logo.png" alt="SASCE Logo" class="sasce-logo">
+            </div>
+            <h1>SASCE Nomination Form – 2025 Election of Office Bearers</h1>
+            <p class="subtitle">Complete this form to nominate a candidate for election to the SASCE Board.</p>
+            <div class="membership-notice">
+                <i class="fas fa-info-circle"></i>
+                <p>Both nominees and nominators must be current and active SASCE members.</p>
+                <p>If unsure of your membership status, please contact <a href="mailto:admin@sasce.net">admin@sasce.net</a> or call 083 315 2522 / 068 362 4199.</p>
+            </div>
+        </header>
+
+        <form id="nominationForm" class="nomination-form">
+            <!-- Section 1: Nomination of Office Bearers -->
+            <section class="form-section" id="section1">
+                <div class="section-header">
+                    <h2>Section 1 of 9</h2>
+                    <h3>Nomination of Office Bearers</h3>
+                </div>
+                <div class="section-content">
+                    <div class="constitution-content">
+                        <p><em>As per Chapter 3, Clause 7.3 of the SASCE Constitution</em></p>
+                        <p>This nomination form is governed by the SASCE Constitution and all nominations will be processed according to the established constitutional procedures.</p>
+                        <p>Welcome to the SASCE Nomination Form for the 2025 Election of Office Bearers. This form will guide you through the nomination process step by step.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Criteria for Election to the SASCE Office Bearers -->
+            <section class="form-section" id="section2">
+                <div class="section-header">
+                    <h2>Section 2 of 9</h2>
+                    <h3>Criteria for Election to the SASCE Office Bearers</h3>
+                </div>
+                <div class="section-content">
+                    <div class="criteria-content">
+                        <p>When considering nominating members to serve on the SASCE Board, the following governance standards supported by King IV should be considered:</p>
+                        <ul>
+                            <li>Any member in good standing is eligible to nominate or be nominated to serve as a SASCE Elected Official</li>
+                            <li>An appropriate mix of knowledge, skills, and experience is required of each nominee, including requisite business acumen and industry experience necessary to govern SASCE.</li>
+                            <li>The need for elected members who qualify to lead other functional sub-committees.</li>
+                            <li>Reasonable capacity and official support ensuring member's availability for SASCE duty and quorated meetings to drive effectiveness of the Board.</li>
+                            <li>The need to comply with legislative and statutory requirements relating to diversity in the composition of the SASCE Board, in terms of gender, race, and skills.</li>
+                            <li>The need to have a succession plan in place to ensure continuity and sustainability of SASCE operations.</li>
+                            <li>The need for candidates that have a broad and extensive network, with capacity to organise and mobilise resources for the benefit of SASCE.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: Rules & Eligibility -->
+            <section class="form-section" id="section3">
+                <div class="section-header">
+                    <h2>Section 3 of 9</h2>
+                    <h3>Rules & Eligibility</h3>
+                </div>
+                <div class="section-content">
+                    <div class="rules-content">
+                        <h4><i class="fas fa-gavel"></i> Rules:</h4>
+                        <ul>
+                            <li>Nominees and nominators must both be current and active SASCE members.</li>
+                        </ul>
+                        <p>If you are unsure of your membership status, please contact the SASCE Office:</p>
+                        <div class="contact-info">
+                            <p><i class="fas fa-envelope"></i> <a href="mailto:admin@sasce.net">admin@sasce.net</a></p>
+                            <p><i class="fas fa-phone"></i> 083 315 2522 / 068 362 4199</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Personal & Membership Information -->
+            <section class="form-section" id="section4">
+                <div class="section-header">
+                    <h2>Section 4 of 9</h2>
+                    <h3>Personal & Membership Information</h3>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName">Name *</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="surname">Surname *</label>
+                            <input type="text" id="surname" name="surname" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="jobTitle">Current Job Title / Company *</label>
+                            <input type="text" id="jobTitle" name="jobTitle" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="qualifications">Certificates / Tertiary Qualifications</label>
+                            <textarea id="qualifications" name="qualifications" rows="3" placeholder="List your qualifications and certifications"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="lastThreePositions">Last Three Positions (Jobs)</label>
+                            <textarea id="lastThreePositions" name="lastThreePositions" rows="3" placeholder="List your last three job positions"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="profilePicture">Profile Picture (Upload)</label>
+                            <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+                            <div class="file-preview" id="profilePreview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cvBioFile">CV / Bio (Upload File)</label>
+                            <input type="file" id="cvBioFile" name="cvBioFile" accept=".pdf,.doc,.docx">
+                            <div class="file-preview" id="cvFilePreview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cvBioText">CV / Bio (Text)</label>
+                            <textarea id="cvBioText" name="cvBioText" rows="4" placeholder="Enter your CV/Bio information here..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="cvBioLink">CV / Bio (Link)</label>
+                            <input type="url" id="cvBioLink" name="cvBioLink" placeholder="https://example.com/cv.pdf">
+                        </div>
+                        <div class="form-group full-width">
+                            <small class="form-help">Provide at least one option: file upload, text, or link to your CV/Bio</small>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="membershipNumber">Organization Name / Membership Number *</label>
+                            <input type="text" id="membershipNumber" name="membershipNumber" required>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: Career Details -->
+            <section class="form-section" id="section5">
+                <div class="section-header">
+                    <h2>Section 5 of 9</h2>
+                    <h3>Career Details</h3>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="currentRoles">Current Career Role(s) *</label>
+                            <textarea id="currentRoles" name="currentRoles" rows="3" required placeholder="Describe your current career roles and responsibilities"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="pastThreeRoles">Past Three Roles</label>
+                            <textarea id="pastThreeRoles" name="pastThreeRoles" rows="3" placeholder="List and describe your past three career roles"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="highlightsAwards">Highlights / Awards</label>
+                            <textarea id="highlightsAwards" name="highlightsAwards" rows="3" placeholder="List any career highlights, awards, or achievements"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Nomination Confirmation -->
+            <section class="form-section" id="section6">
+                <div class="section-header">
+                    <h2>Section 6 of 9</h2>
+                    <h3>Nomination Confirmation</h3>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Are you nominating yourself? *</label>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="selfNomination" value="yes" required>
+                                    <span class="radio-custom"></span>
+                                    Yes
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="selfNomination" value="no" required>
+                                    <span class="radio-custom"></span>
+                                    No
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="positionNominated">Position Nominated For *</label>
+                            <select id="positionNominated" name="positionNominated" required>
+                                <option value="">Select a position</option>
+                                <option value="president">President</option>
+                                <option value="deputy-president">Deputy President</option>
+                                <option value="general-secretary">General Secretary</option>
+                                <option value="deputy-general-secretary">Deputy General Secretary</option>
+                                <option value="treasurer">Treasurer</option>
+                                <option value="deputy-treasurer">Deputy Treasurer</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 7: Nominator Details -->
+            <section class="form-section" id="section7">
+                <div class="section-header">
+                    <h2>Section 7 of 9</h2>
+                    <h3>Nominator Details</h3>
+                </div>
+                <div class="section-content">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="nominatorFirstName">Nominator Name *</label>
+                            <input type="text" id="nominatorFirstName" name="nominatorFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nominatorSurname">Nominator Surname *</label>
+                            <input type="text" id="nominatorSurname" name="nominatorSurname" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="nominatorMembershipNumber">Nominator Organization Name / Membership Number *</label>
+                            <input type="text" id="nominatorMembershipNumber" name="nominatorMembershipNumber" required>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 8: Nominee Acceptance -->
+            <section class="form-section" id="section8">
+                <div class="section-header">
+                    <h2>Section 8 of 9</h2>
+                    <h3>Nominee Acceptance</h3>
+                </div>
+                <div class="section-content">
+                    <div class="acceptance-text">
+                        <p><strong>I, [Full Name], accept my nomination to serve on the SASCE Board and commit to advancing the organization's strategic objectives. I understand that this is a voluntary position serving the broader education and training community for the benefit of South Africa.</strong></p>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="nomineeAcceptance" name="nomineeAcceptance" required>
+                            <span class="checkbox-custom"></span>
+                            I, <span id="acceptanceName"></span>, accept my nomination to serve on the SASCE Board and commit to advancing the organization's strategic objectives. I understand that this is a voluntary position serving the broader education and training community for the benefit of South Africa.
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 9: Summary & Submission -->
+            <section class="form-section" id="section9">
+                <div class="section-header">
+                    <h2>Section 9 of 9</h2>
+                    <h3>Summary & Submission</h3>
+                </div>
+                <div class="section-content">
+                    <div class="summary-content">
+                        <p>Please review all the information you have provided before submitting your nomination. Ensure that all required fields are completed and that you have read and understood the criteria and rules for nomination.</p>
+                        <div class="final-checklist">
+                            <h4><i class="fas fa-check-circle"></i> Final Checklist:</h4>
+                            <ul>
+                                <li>All personal and membership information is complete</li>
+                                <li>Career details and qualifications are provided</li>
+                                <li>Nomination position is selected</li>
+                                <li>Nominator details are provided (if applicable)</li>
+                                <li>Nominee acceptance is confirmed</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" id="prevBtn" class="btn btn-secondary">Previous</button>
+                <button type="button" id="nextBtn" class="btn btn-primary">Next</button>
+                <button type="button" id="addNominationBtn" class="btn btn-info" style="display: none;">Add Another Nomination</button>
+                <button type="submit" id="submitBtn" class="btn btn-success" style="display: none;">Submit All Nominations</button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">1 of 9</span>
+            </div>
+        </form>
+
+        <!-- Nominations Summary -->
+        <div id="nominationsSummary" class="nominations-summary" style="display: none;">
+            <h3><i class="fas fa-list"></i> Nominations Summary</h3>
+            <div id="nominationsList" class="nominations-list">
+                <!-- Nominations will be listed here -->
+            </div>
+            <div class="summary-actions">
+                <button type="button" id="addNewNominationBtn" class="btn btn-info">Add New Nomination</button>
+                <button type="button" id="editNominationBtn" class="btn btn-warning">Edit Selected</button>
+                <button type="button" id="removeNominationBtn" class="btn btn-danger">Remove Selected</button>
+                <button type="button" id="submitAllBtn" class="btn btn-success">Submit All Nominations</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

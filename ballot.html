@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Voting Ballot – 2025 Election</title>
+    <link rel="stylesheet" href="ballot-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="ballot-container">
+        <header class="ballot-header">
+            <div class="logo-container">
+                <img src="logo.png" alt="SASCE Logo" class="sasce-logo">
+            </div>
+            <h1><i class="fas fa-vote-yea"></i> SASCE Voting Ballot – 2025 Election</h1>
+            <p class="subtitle">Cast your vote for the SASCE Board Office Bearers</p>
+            <div class="voting-instructions">
+                <i class="fas fa-info-circle"></i>
+                <p><strong>Instructions:</strong> You can vote for ONE candidate per position. Review all candidates carefully before submitting your ballot.</p>
+            </div>
+        </header>
+
+        <!-- Voter Information Section -->
+        <section class="voter-section">
+            <h2><i class="fas fa-user"></i> Voter Information</h2>
+            <div class="voter-form">
+                <div class="form-group">
+                    <label for="voterName">Your Full Name *</label>
+                    <input type="text" id="voterName" name="voterName" required>
+                </div>
+                <div class="form-group">
+                    <label for="voterEmail">Email Address *</label>
+                    <input type="email" id="voterEmail" name="voterEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="voterMembership">Membership Number / Organization *</label>
+                    <input type="text" id="voterMembership" name="voterMembership" required>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ballot Form -->
+        <form id="ballotForm" class="ballot-form">
+            <!-- President Position -->
+            <section class="position-section" id="president-section">
+                <div class="position-header">
+                    <h2><i class="fas fa-crown"></i> President</h2>
+                    <p class="position-description">Vote for ONE candidate for President</p>
+                </div>
+                <div class="candidates-container" id="president-candidates">
+                    <div class="loading-candidates">
+                        <i class="fas fa-spinner fa-spin"></i> Loading candidates...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deputy President Position -->
+            <section class="position-section" id="deputy-president-section">
+                <div class="position-header">
+                    <h2><i class="fas fa-user-tie"></i> Deputy President</h2>
+                    <p class="position-description">Vote for ONE candidate for Deputy President</p>
+                </div>
+                <div class="candidates-container" id="deputy-president-candidates">
+                    <div class="loading-candidates">
+                        <i class="fas fa-spinner fa-spin"></i> Loading candidates...
+                    </div>
+                </div>
+            </section>
+
+            <!-- General Secretary Position -->
+            <section class="position-section" id="general-secretary-section">
+                <div class="position-header">
+                    <h2><i class="fas fa-file-alt"></i> General Secretary</h2>
+                    <p class="position-description">Vote for ONE candidate for General Secretary</p>
+                </div>
+                <div class="candidates-container" id="general-secretary-candidates">
+                    <div class="loading-candidates">
+                        <i class="fas fa-spinner fa-spin"></i> Loading candidates...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deputy General Secretary Position -->
+            <section class="position-section" id="deputy-general-secretary-section">
+                <div class="position-header">
+                    <h2><i class="fas fa-file-signature"></i> Deputy General Secretary</h2>
+                    <p class="position-description">Vote for ONE candidate for Deputy General Secretary</p>
+                </div>
+                <div class="candidates-container" id="deputy-general-secretary-candidates">
+                    <div class="loading-candidates">
+                        <i class="fas fa-spinner fa-spin"></i> Loading candidates...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Treasurer Position -->
+            <section class="position-section" id="treasurer-section">
+                <div class="position-header">
+                    <h2><i class="fas fa-coins"></i> Treasurer</h2>
+                    <p class="position-description">Vote for ONE candidate for Treasurer</p>
+                </div>
+                <div class="candidates-container" id="treasurer-candidates">
+                    <div class="loading-candidates">
+                        <i class="fas fa-spinner fa-spin"></i> Loading candidates...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deputy Treasurer Position -->
+            <section class="position-section" id="deputy-treasurer-section">
+                <div class="position-header">
+                    <h2><i class="fas fa-wallet"></i> Deputy Treasurer</h2>
+                    <p class="position-description">Vote for ONE candidate for Deputy Treasurer</p>
+                </div>
+                <div class="candidates-container" id="deputy-treasurer-candidates">
+                    <div class="loading-candidates">
+                        <i class="fas fa-spinner fa-spin"></i> Loading candidates...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voting Summary -->
+            <section class="voting-summary">
+                <h2><i class="fas fa-clipboard-check"></i> Voting Summary</h2>
+                <div class="summary-content">
+                    <p>Please review your selections before submitting:</p>
+                    <div id="voteSummary" class="vote-summary">
+                        <!-- Vote summary will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submit Button -->
+            <div class="ballot-actions">
+                <button type="button" id="reviewVotesBtn" class="btn btn-info">
+                    <i class="fas fa-eye"></i> Review Votes
+                </button>
+                <button type="submit" id="submitBallotBtn" class="btn btn-success">
+                    <i class="fas fa-check"></i> Submit Ballot
+                </button>
+            </div>
+        </form>
+
+        <!-- Vote Confirmation Modal -->
+        <div id="voteConfirmationModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-check-circle"></i> Confirm Your Vote</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body" id="confirmationBody">
+                    <!-- Confirmation details will be loaded here -->
+                </div>
+                <div class="modal-footer">
+                    <button id="confirmVoteBtn" class="btn btn-success">Confirm & Submit</button>
+                    <button id="cancelVoteBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Processing your vote...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+    </script>
+
+    <script src="ballot-script.js"></script>
+</body>
+</html>
