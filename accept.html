@@ -4,36 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Nomination Acceptance</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      background: #f8fafc;
-      color: #111;
-      margin: 0;
-      padding: 40px 20px;
-    }
-    .container {
-      max-width: 640px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-    }
+    body { background: #FFFFFF; }
+    .container { max-width: 900px; padding: 20px; }
     h1 {
       text-align: center;
       margin-top: 0;
       font-size: 1.5rem;
       color: #0a3b7e;
     }
-    .accept-statement {
-      background: #f0f7ff;
-      border: 1px solid #cde2ff;
-      padding: 18px;
-      border-radius: 8px;
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
+    .accept-statement { margin-bottom: 24px; }
     .choices {
       display: flex;
       justify-content: center;
@@ -51,27 +33,189 @@
       accent-color: #0066cc;
       transform: scale(1.2);
     }
-    button {
-      display: block;
+    button { width: 100%; }
+    
+    /* Detail sections */
+    .detail-section {
+      margin-bottom: 24px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .detail-section h3 {
+      margin: 0 0 12px 0;
+      color: #1e293b;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    
+    .detail-value {
+      color: #1e293b;
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    
+    .membership-table {
       width: 100%;
-      background: #0066cc;
-      color: #fff;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    
+    .membership-table th,
+    .membership-table td {
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .membership-table th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.9rem;
+    }
+    
+    .membership-table td {
+      font-size: 0.9rem;
+    }
+    
+    @media (max-width: 640px) {
+      .detail-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Confirmation Screen Styles */
+    .confirmation-content {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .confirmation-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+    
+    .confirmation-icon.success {
+      color: #10b981;
+    }
+    
+    .confirmation-icon.denied {
+      color: #ef4444;
+    }
+    
+    .confirmation-content h2 {
+      color: #1e293b;
+      margin-bottom: 16px;
+      font-size: 2rem;
+    }
+    
+    .confirmation-content p {
+      color: #64748b;
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    
+    .confirmation-details {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    
+    .confirmation-details h3 {
+      margin: 0 0 12px 0;
+      color: #1e293b;
+      font-size: 1.1rem;
+    }
+    
+    .confirmation-details p {
+      margin: 8px 0;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+    
+    .btn-close {
+      background: #6b7280;
+      color: white;
       border: none;
-      padding: 12px;
+      padding: 12px 24px;
       border-radius: 8px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-    button:hover { background: #0052a3; }
+    
+    .btn-close:hover {
+      background: #4b5563;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Nomination Acceptance</h1>
+    <header class="form-header" style="margin-bottom:20px;">
+      <div class="logo-container">
+        <img src="logo.png" alt="SASCE Logo" class="sasce-logo">
+      </div>
+      <h1>Nomination Acceptance</h1>
+      <p class="subtitle">Review your nomination details and confirm your response.</p>
+    </header>
 
-    <div id="nomineeInfo" class="accept-statement" style="background:#fffbea;border-color:#ffe8a1">
+    <div id="nomineeInfo" class="acceptance-text">
       <div id="nomineeSummary">Loading nomination...</div>
+    </div>
+
+    <div id="nominationDetails" style="display:none;">
+      <h2>Nomination Details</h2>
+      
+      <div class="detail-section">
+        <h3>Personal Information</h3>
+        <div class="detail-grid" id="personalInfo"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Career & Qualifications</h3>
+        <div class="detail-grid" id="careerInfo"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Professional Memberships</h3>
+        <div id="membershipsInfo"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Experience & Eligibility</h3>
+        <div class="detail-grid" id="experienceInfo"></div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Nominator Information</h3>
+        <div class="detail-grid" id="nominatorInfo"></div>
+      </div>
     </div>
 
     <div class="accept-statement" id="statement">
@@ -89,8 +233,23 @@
         <label><input type="radio" name="decision" value="deny" /> Deny</label>
       </div>
 
-      <button type="submit">Submit</button>
+      <button type="submit" class="btn btn-success">Submit</button>
     </form>
+  </div>
+
+  <div id="confirmationScreen" style="display:none;">
+    <div class="confirmation-content">
+      <div class="confirmation-icon" id="confirmationIcon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2 id="confirmationTitle">Thank You!</h2>
+      <p id="confirmationMessage">Your response has been recorded successfully.</p>
+      <div class="confirmation-details" id="confirmationDetails"></div>
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button onclick="window.close()" class="btn btn-secondary" style="width:auto;">Close Window</button>
+        <a href="/" class="btn btn-primary" style="width:auto; text-decoration:none; display:inline-block;">Back to Form</a>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -119,6 +278,22 @@
 
     let nominationData = null;
 
+    function formatPositionName(position) {
+      const positionMap = {
+        'president': 'President',
+        'deputy-president': 'Deputy President',
+        'general-secretary': 'General Secretary',
+        'deputy-general-secretary': 'Deputy General Secretary',
+        'treasurer': 'Treasurer',
+        'deputy-treasurer': 'Deputy Treasurer'
+      };
+      return positionMap[position] || position;
+    }
+
+    function createDetailItem(label, value) {
+      return `<div class="detail-item"><div class="detail-label">${label}</div><div class="detail-value">${value || 'N/A'}</div></div>`;
+    }
+
     async function loadNomination(){
       if(!id || !token){ nomineeSummary.textContent = 'Invalid link.'; return; }
       const ref = doc(db, 'nominations', id);
@@ -127,26 +302,140 @@
       const data = snap.data();
       if(!data.acceptanceToken || data.acceptanceToken !== token){ nomineeSummary.textContent = 'Invalid or expired token.'; return; }
       nominationData = data;
+      
+      // Summary section with personalized greeting
+      const fullName = `${data.firstName || ''} ${data.surname || ''}`.trim();
       nomineeSummary.innerHTML = `
-        <div><strong>Nominee:</strong> ${data.firstName || ''} ${data.surname || ''}</div>
-        <div><strong>Position:</strong> ${data.positionNominated || ''}</div>
+        <div style="margin-bottom: 10px; color:#3A6B9C; font-weight:700;">
+          Dear ${fullName || 'Nominee'}, you have been nominated for the 2026/2027 Election of office bearers.
+        </div>
+        <div><strong>Nominee:</strong> ${fullName}</div>
+        <div><strong>Position:</strong> ${formatPositionName(data.positionNominated)}</div>
         <div><strong>Organization:</strong> ${data.membershipNumber || ''}</div>
         <div><strong>Job Title:</strong> ${data.jobTitle || ''}</div>
       `;
+
+      // Personal Information
+      document.getElementById('personalInfo').innerHTML = [
+        createDetailItem('Full Name', `${data.firstName || ''} ${data.surname || ''}`),
+        createDetailItem('Email', data.email || ''),
+        createDetailItem('Phone', data.phone || ''),
+        createDetailItem('Job Title/Company', data.jobTitle || ''),
+        createDetailItem('Organization/Membership', data.membershipNumber || ''),
+        createDetailItem('Position Nominated', formatPositionName(data.positionNominated))
+      ].join('');
+
+      // Career & Qualifications
+      document.getElementById('careerInfo').innerHTML = [
+        createDetailItem('Qualifications', data.qualifications || ''),
+        createDetailItem('Past Three Roles', data.pastThreeRoles || ''),
+        createDetailItem('Career Highlights/Awards', data.careerHighlights || ''),
+        createDetailItem('CV/Bio Text', data.cvBioText ? (data.cvBioText.length > 200 ? data.cvBioText.substring(0, 200) + '...' : data.cvBioText) : ''),
+        createDetailItem('CV/Bio Link', data.cvBioLink ? `<a href="${data.cvBioLink}" target="_blank">View CV/Bio</a>` : ''),
+        createDetailItem('Profile Picture', data.profilePictureFileName ? `Uploaded: ${data.profilePictureFileName}` : '')
+      ].join('');
+
+      // Professional Memberships
+      const membershipsHtml = Array.isArray(data.membershipInstitution) && data.membershipInstitution.length > 0 ? `
+        <table class="membership-table">
+          <thead>
+            <tr>
+              <th>Institution</th>
+              <th>Designation</th>
+              <th>Membership Number</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.membershipInstitution.map((inst, idx) => `
+              <tr>
+                <td>${inst || ''}</td>
+                <td>${(data.membershipDesignation && data.membershipDesignation[idx]) || ''}</td>
+                <td>${(data.membershipNumber && data.membershipNumber[idx]) || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<div class="detail-value">No memberships provided</div>';
+      document.getElementById('membershipsInfo').innerHTML = membershipsHtml;
+
+      // Experience & Eligibility
+      document.getElementById('experienceInfo').innerHTML = [
+        createDetailItem('Infrastructure Support', data.infrastructureSupport === 'yes' ? 'Yes' : data.infrastructureSupport === 'no' ? 'No' : ''),
+        createDetailItem('WIL/Career Facilitator', data.wilFacilitatorExperience || ''),
+        createDetailItem('WIL Lecturer/Researcher', data.wilLecturerExperience || ''),
+        createDetailItem('WIL Host/Mentor', data.wilHostExperience || ''),
+        createDetailItem('CE/WIL Sponsor/Funder/Volunteer', data.ceWilSponsorExperience || '')
+      ].join('');
+
+      // Nominator Information
+      document.getElementById('nominatorInfo').innerHTML = [
+        createDetailItem('Nominator Name', `${data.nominatorFirstName || ''} ${data.nominatorSurname || ''}`),
+        createDetailItem('Nominator Email', data.nominatorEmail || ''),
+        createDetailItem('Nominator Phone', data.nominatorPhone || ''),
+        createDetailItem('Nominator Organization', data.nominatorMembershipNumber || ''),
+        createDetailItem('Nomination Type', data.selfNomination === 'self' ? 'Self Nomination' : 'Third-Party Nomination'),
+        createDetailItem('Submitted At', data.submittedAt ? new Date(data.submittedAt.seconds * 1000).toLocaleString() : '')
+      ].join('');
+
+      // Show details section
+      document.getElementById('nominationDetails').style.display = 'block';
+    }
+
+    function showConfirmationScreen(choice) {
+      const isAccepted = choice === 'accept';
+      const confirmationIcon = document.getElementById('confirmationIcon');
+      const confirmationTitle = document.getElementById('confirmationTitle');
+      const confirmationMessage = document.getElementById('confirmationMessage');
+      const confirmationDetails = document.getElementById('confirmationDetails');
+      
+      // Update icon and styling
+      if (isAccepted) {
+        confirmationIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+        confirmationIcon.className = 'confirmation-icon success';
+        confirmationTitle.textContent = 'Nomination Accepted!';
+        confirmationMessage.textContent = 'Thank you for accepting the nomination. Your response has been recorded successfully.';
+      } else {
+        confirmationIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+        confirmationIcon.className = 'confirmation-icon denied';
+        confirmationTitle.textContent = 'Nomination Declined';
+        confirmationMessage.textContent = 'Thank you for your response. Your decision has been recorded successfully.';
+      }
+      
+      // Show nomination details
+      confirmationDetails.innerHTML = `
+        <h3>Nomination Summary</h3>
+        <p><strong>Nominee:</strong> ${nominationData.firstName} ${nominationData.surname}</p>
+        <p><strong>Position:</strong> ${formatPositionName(nominationData.positionNominated)}</p>
+        <p><strong>Organization:</strong> ${nominationData.membershipNumber || 'N/A'}</p>
+        <p><strong>Response:</strong> ${isAccepted ? 'Accepted' : 'Declined'}</p>
+        <p><strong>Date:</strong> ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+      `;
+      
+      // Hide main content and show confirmation
+      document.querySelector('.container').style.display = 'none';
+      document.getElementById('confirmationScreen').style.display = 'block';
     }
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const choice = form.decision.value;
       if(!nominationData){ alert('Nomination not loaded.'); return; }
-      const ref = doc(db, 'nominations', id);
-      const acceptanceStatus = choice === 'accept' ? 'Accepted' : 'Denied';
-      await updateDoc(ref, {
-        acceptanceStatus,
-        acceptanceRespondedAt: new Date()
-      });
-      alert(acceptanceStatus === 'Accepted' ? '✅ You have accepted the nomination. Thank you!' : '❌ You have declined the nomination.');
-      form.reset();
+      
+      try {
+        const ref = doc(db, 'nominations', id);
+        const acceptanceStatus = choice === 'accept' ? 'Accepted' : 'Denied';
+        await updateDoc(ref, {
+          acceptanceStatus,
+          acceptanceRespondedAt: new Date()
+        });
+        
+        // Show confirmation screen instead of alert
+        showConfirmationScreen(choice);
+        
+      } catch (error) {
+        console.error('Error updating nomination:', error);
+        alert('There was an error recording your response. Please try again.');
+      }
     });
 
     loadNomination();
