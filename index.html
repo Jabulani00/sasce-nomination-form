@@ -151,19 +151,24 @@
                 <div class="section-content">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Are you nominating yourself? *</label>
+                            <label>Are you nominating yourself or another person?*</label>
                             <div class="radio-group">
                                 <label class="radio-label">
-                                    <input type="radio" name="selfNomination" value="yes" required>
+                                    <input type="radio" name="selfNomination" value="self" required>
                                     <span class="radio-custom"></span>
-                                    Yes
+                                    Self Nomination
                                 </label>
                                 <label class="radio-label">
-                                    <input type="radio" name="selfNomination" value="no" required>
+                                    <input type="radio" name="selfNomination" value="third-party" required>
                                     <span class="radio-custom"></span>
-                                    No
+                                    Third-Party Nomination
                                 </label>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="acceptanceStatus">Acceptance Status</label>
+                            <input type="text" id="acceptanceStatus" name="acceptanceStatus" readonly>
+                            <small class="form-help">This status is automatically determined based on nomination type</small>
                         </div>
                         <div class="form-group">
                             <label for="positionNominated">Position Nominated For *</label>

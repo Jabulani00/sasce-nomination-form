@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nomination Acceptance</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: #f8fafc;
+      color: #111;
+      margin: 0;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    h1 {
+      text-align: center;
+      margin-top: 0;
+      font-size: 1.5rem;
+      color: #0a3b7e;
+    }
+    .accept-statement {
+      background: #f0f7ff;
+      border: 1px solid #cde2ff;
+      padding: 18px;
+      border-radius: 8px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .choices {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    input[type="radio"] {
+      accent-color: #0066cc;
+      transform: scale(1.2);
+    }
+    button {
+      display: block;
+      width: 100%;
+      background: #0066cc;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #0052a3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Nomination Acceptance</h1>
+
+    <div id="nomineeInfo" class="accept-statement" style="background:#fffbea;border-color:#ffe8a1">
+      <div id="nomineeSummary">Loading nomination...</div>
+    </div>
+
+    <div class="accept-statement" id="statement">
+      <p>
+        I, the undersigned, do hereby acknowledge that I have been nominated
+        to serve as an SASCE office bearer. I understand the responsibilities
+        associated with this role and confirm that my participation is
+        voluntary and aligned with advancing the objectives of SASCE.
+      </p>
+    </div>
+
+    <form id="acceptanceForm">
+      <div class="choices">
+        <label><input type="radio" name="decision" value="accept" required /> Accept</label>
+        <label><input type="radio" name="decision" value="deny" /> Deny</label>
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+      authDomain: "facilio-app.firebaseapp.com",
+      projectId: "facilio-app",
+      storageBucket: "facilio-app.firebasestorage.app",
+      messagingSenderId: "515454562817",
+      appId: "1:515454562817:web:1f89da18665af2b67e0600",
+      measurementId: "G-981TTX1T68"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function qs(param){ return new URLSearchParams(location.search).get(param); }
+
+    const id = qs('id');
+    const token = qs('token');
+    const nomineeSummary = document.getElementById('nomineeSummary');
+    const form = document.getElementById('acceptanceForm');
+
+    let nominationData = null;
+
+    async function loadNomination(){
+      if(!id || !token){ nomineeSummary.textContent = 'Invalid link.'; return; }
+      const ref = doc(db, 'nominations', id);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) { nomineeSummary.textContent = 'Nomination not found.'; return; }
+      const data = snap.data();
+      if(!data.acceptanceToken || data.acceptanceToken !== token){ nomineeSummary.textContent = 'Invalid or expired token.'; return; }
+      nominationData = data;
+      nomineeSummary.innerHTML = `
+        <div><strong>Nominee:</strong> ${data.firstName || ''} ${data.surname || ''}</div>
+        <div><strong>Position:</strong> ${data.positionNominated || ''}</div>
+        <div><strong>Organization:</strong> ${data.membershipNumber || ''}</div>
+        <div><strong>Job Title:</strong> ${data.jobTitle || ''}</div>
+      `;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const choice = form.decision.value;
+      if(!nominationData){ alert('Nomination not loaded.'); return; }
+      const ref = doc(db, 'nominations', id);
+      const acceptanceStatus = choice === 'accept' ? 'Accepted' : 'Denied';
+      await updateDoc(ref, {
+        acceptanceStatus,
+        acceptanceRespondedAt: new Date()
+      });
+      alert(acceptanceStatus === 'Accepted' ? '✅ You have accepted the nomination. Thank you!' : '❌ You have declined the nomination.');
+      form.reset();
+    });
+
+    loadNomination();
+  </script>
+</body>
+</html>

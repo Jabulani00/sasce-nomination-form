@@ -8,6 +8,38 @@ class AdminPanel {
         this.loadNominations();
     }
 
+    async ensureAcceptanceToken(nominationId) {
+        try {
+            const { getFirestore, doc, getDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const db = getFirestore();
+            const ref = doc(db, 'nominations', nominationId);
+            const snapshot = await getDoc(ref);
+            if (!snapshot.exists()) return null;
+            const data = snapshot.data();
+            if (data.acceptanceToken) return data.acceptanceToken;
+            const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            await updateDoc(ref, { acceptanceToken: token, updatedAt: new Date() });
+            return token;
+        } catch (e) {
+            console.error('Error ensuring token', e);
+            this.showError('Failed to generate acceptance link token.');
+            return null;
+        }
+    }
+
+    async copyAcceptanceLink(nominationId) {
+        const token = await this.ensureAcceptanceToken(nominationId);
+        if (!token) return;
+        const base = 'https://sasce-nomination-form.vercel.app/accept.html';
+        const url = `${base}?id=${encodeURIComponent(nominationId)}&token=${encodeURIComponent(token)}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            this.showSuccess('Acceptance link copied to clipboard');
+        } catch (e) {
+            this.showError('Could not copy link.');
+        }
+    }
+
     initializeEventListeners() {
         // Control buttons
         document.getElementById('refreshBtn').addEventListener('click', () => this.loadNominations());
@@ -99,7 +131,7 @@ class AdminPanel {
         if (this.filteredNominations.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="10" class="empty-state">
+                    <td colspan="11" class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <h3>No nominations found</h3>
                         <p>No nominations match your current filters.</p>
@@ -110,14 +142,21 @@ class AdminPanel {
             return;
         }
         
-        tbody.innerHTML = this.filteredNominations.map(nomination => `
+        tbody.innerHTML = this.filteredNominations.map(nomination => {
+            const acc = nomination.acceptanceStatus || 'Pending';
+            const accClass = acc === 'Accepted' ? 'accepted' : (acc === 'Denied' ? 'rejected' : 'pending');
+            const accCell = acc === 'Pending'
+                ? `<span class="status-badge status-${accClass}" style="cursor:pointer" title="Copy acceptance link" onclick="adminPanel.copyAcceptanceLink('${nomination.id}')">${acc}</span>`
+                : `<span class="status-badge status-${accClass}">${acc}</span>`;
+            return `
             <tr>
                 <td>${nomination.id.substring(0, 8)}...</td>
                 <td>${nomination.firstName} ${nomination.surname}</td>
                 <td>${this.formatPositionName(nomination.positionNominated)}</td>
                 <td>${nomination.membershipNumber || 'N/A'}</td>
                 <td>${nomination.jobTitle || 'N/A'}</td>
-                <td>${nomination.selfNomination === 'yes' ? 'Yes' : 'No'}</td>
+                <td>${nomination.selfNomination === 'self' ? 'Self' : 'Third-Party'}</td>
+                <td>${accCell}</td>
                 <td>${nomination.nominatorFirstName} ${nomination.nominatorSurname}</td>
                 <td><span class="status-badge status-${nomination.status || 'pending'}">${nomination.status || 'pending'}</span></td>
                 <td>${this.formatDate(nomination.submittedAt)}</td>
@@ -129,7 +168,8 @@ class AdminPanel {
                     </div>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
         
         tableInfo.textContent = `Showing ${this.filteredNominations.length} of ${this.nominations.length} nominations`;
     }
@@ -173,20 +213,68 @@ class AdminPanel {
                 <h4><i class="fas fa-briefcase"></i> Career Information</h4>
                 <div class="detail-grid">
                     <div class="detail-item">
-                        <div class="detail-label">Current Roles</div>
-                        <div class="detail-value">${nomination.currentRoles || 'N/A'}</div>
+                        <div class="detail-label">Qualifications</div>
+                        <div class="detail-value">${nomination.qualifications || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Past Three Roles</div>
                         <div class="detail-value">${nomination.pastThreeRoles || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Highlights/Awards</div>
-                        <div class="detail-value">${nomination.highlightsAwards || 'N/A'}</div>
+                        <div class="detail-label">Career Highlights / Awards</div>
+                        <div class="detail-value">${nomination.careerHighlights || 'N/A'}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <h4><i class="fas fa-id-badge"></i> Professional Memberships</h4>
+                ${Array.isArray(nomination.membershipInstitution) && nomination.membershipInstitution.length > 0 ? `
+                <div class="table-wrapper">
+                    <table class="nominations-table">
+                        <thead>
+                            <tr>
+                                <th>Institution</th>
+                                <th>Designation</th>
+                                <th>Membership Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${nomination.membershipInstitution.map((inst, idx) => `
+                                <tr>
+                                    <td>${inst || ''}</td>
+                                    <td>${(nomination.membershipDesignation && nomination.membershipDesignation[idx]) || ''}</td>
+                                    <td>${(nomination.membershipNumber && nomination.membershipNumber[idx]) || ''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ` : '<div class="detail-value">No memberships provided</div>'}
+            </div>
+
+            <div class="detail-section">
+                <h4><i class="fas fa-tools"></i> Eligibility & Experience</h4>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Infrastructure Support</div>
+                        <div class="detail-value">${nomination.infrastructureSupport === 'yes' ? 'Yes' : nomination.infrastructureSupport === 'no' ? 'No' : 'N/A'}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Qualifications</div>
-                        <div class="detail-value">${nomination.qualifications || 'N/A'}</div>
+                        <div class="detail-label">WIL/Career Facilitator</div>
+                        <div class="detail-value">${nomination.wilFacilitatorExperience || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">WIL Lecturer/Researcher</div>
+                        <div class="detail-value">${nomination.wilLecturerExperience || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">WIL Host/Mentor</div>
+                        <div class="detail-value">${nomination.wilHostExperience || 'N/A'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">CE/WIL Sponsor, Funder or Volunteer</div>
+                        <div class="detail-value">${nomination.ceWilSponsorExperience || 'N/A'}</div>
                     </div>
                 </div>
             </div>
@@ -203,8 +291,15 @@ class AdminPanel {
                         <div class="detail-value">${nomination.nominatorMembershipNumber || 'N/A'}</div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-label">Self Nomination</div>
-                        <div class="detail-value">${nomination.selfNomination === 'yes' ? 'Yes' : 'No'}</div>
+                        <div class="detail-label">Nomination Type</div>
+                        <div class="detail-value">${nomination.selfNomination === 'self' ? 'Self Nomination' : 'Third-Party Nomination'}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Acceptance Status</div>
+                        <div class="detail-value">
+                            ${(() => { const acc = nomination.acceptanceStatus || 'Pending'; const cls = acc === 'Accepted' ? 'accepted' : (acc === 'Denied' ? 'rejected' : 'pending'); return `<span class=\"status-badge status-${cls}\">${acc}</span>`; })()}
+                            ${(!nomination.acceptanceStatus || nomination.acceptanceStatus === 'Pending') ? `<button class=\"btn btn-secondary\" style=\"margin-left:8px\" onclick=\"adminPanel.copyAcceptanceLink('${nomination.id}')\"><i class=\"fas fa-link\"></i> Copy Link</button>` : ''}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -300,17 +395,25 @@ class AdminPanel {
             'Position Nominated': this.formatPositionName(nomination.positionNominated),
             'Job Title': nomination.jobTitle || '',
             'Organization': nomination.membershipNumber || '',
-            'Self Nomination': nomination.selfNomination === 'yes' ? 'Yes' : 'No',
+            'Nomination Type': nomination.selfNomination === 'self' ? 'Self Nomination' : 'Third-Party Nomination',
+            'Acceptance Status': nomination.acceptanceStatus || 'Pending',
             'Nominator Name': `${nomination.nominatorFirstName} ${nomination.nominatorSurname}`,
             'Nominator Organization': nomination.nominatorMembershipNumber || '',
-            'Current Roles': nomination.currentRoles || '',
             'Past Three Roles': nomination.pastThreeRoles || '',
-            'Highlights/Awards': nomination.highlightsAwards || '',
+            'Career Highlights / Awards': nomination.careerHighlights || '',
             'Qualifications': nomination.qualifications || '',
             'CV/Bio Text': nomination.cvBioText ? nomination.cvBioText.substring(0, 500) : '',
             'CV/Bio Link': nomination.cvBioLink || '',
             'Profile Picture': nomination.profilePictureFileName || '',
             'CV File': nomination.cvBioFileName || '',
+            'Infrastructure Support': nomination.infrastructureSupport || '',
+            'WIL/Career Facilitator': nomination.wilFacilitatorExperience || '',
+            'WIL Lecturer/Researcher': nomination.wilLecturerExperience || '',
+            'WIL Host/Mentor': nomination.wilHostExperience || '',
+            'CE/WIL Sponsor/Funder/Volunteer': nomination.ceWilSponsorExperience || '',
+            'Memberships - Institutions': Array.isArray(nomination.membershipInstitution) ? nomination.membershipInstitution.join('; ') : '',
+            'Memberships - Designations': Array.isArray(nomination.membershipDesignation) ? nomination.membershipDesignation.join('; ') : '',
+            'Memberships - Numbers': Array.isArray(nomination.membershipNumber) ? nomination.membershipNumber.join('; ') : '',
             'Status': nomination.status || 'pending',
             'Submitted At': this.formatDate(nomination.submittedAt),
             'Nominee Acceptance': nomination.nomineeAcceptance ? 'Accepted' : 'Not Accepted'

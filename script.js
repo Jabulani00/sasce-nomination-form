@@ -39,6 +39,11 @@ class NominationForm {
         // Update acceptance text with name
         document.getElementById('firstName').addEventListener('input', () => this.updateAcceptanceText());
         document.getElementById('surname').addEventListener('input', () => this.updateAcceptanceText());
+        
+        // Update acceptance status based on nomination type
+        document.querySelectorAll('input[name="selfNomination"]').forEach(radio => {
+            radio.addEventListener('change', () => this.updateAcceptanceStatus());
+        });
     }
 
     showSection(sectionNumber) {
@@ -111,7 +116,7 @@ class NominationForm {
         if (this.currentSection === 5) {
             const selfNomination = document.querySelector('input[name="selfNomination"]:checked');
             if (!selfNomination) {
-                this.showSectionError('Please select whether you are nominating yourself');
+                this.showSectionError('Please select a nomination type');
                 isValid = false;
             }
         }
@@ -289,14 +294,52 @@ class NominationForm {
         }
     }
 
+    updateAcceptanceStatus() {
+        const selfNomination = document.querySelector('input[name="selfNomination"]:checked');
+        const acceptanceStatus = document.getElementById('acceptanceStatus');
+        
+        if (selfNomination) {
+            if (selfNomination.value === 'self') {
+                acceptanceStatus.value = 'Accepted';
+                acceptanceStatus.style.color = '#27ae60';
+                acceptanceStatus.style.fontWeight = '600';
+            } else if (selfNomination.value === 'third-party') {
+                acceptanceStatus.value = 'Pending';
+                acceptanceStatus.style.color = '#f39c12';
+                acceptanceStatus.style.fontWeight = '600';
+            }
+        } else {
+            acceptanceStatus.value = '';
+            acceptanceStatus.style.color = '#6c757d';
+            acceptanceStatus.style.fontWeight = 'normal';
+        }
+    }
+
     collectFormData() {
         const form = document.getElementById('nominationForm');
         const formData = new FormData(form);
         
-        // Convert FormData to regular object
+        // Convert FormData to regular object with support for repeated fields (arrays)
         const data = {};
         for (let [key, value] of formData.entries()) {
-            data[key] = value;
+            // Normalize checkbox/radio arrays using [] notation
+            if (key.endsWith('[]')) {
+                const normalizedKey = key.slice(0, -2);
+                if (!Array.isArray(data[normalizedKey])) {
+                    data[normalizedKey] = [];
+                }
+                if (value && value.trim() !== '') {
+                    data[normalizedKey].push(value);
+                }
+            } else if (data[key] !== undefined) {
+                // If the same key appears multiple times without [], aggregate into array
+                if (!Array.isArray(data[key])) {
+                    data[key] = [data[key]];
+                }
+                data[key].push(value);
+            } else {
+                data[key] = value;
+            }
         }
         
         // Add file information
@@ -555,6 +598,8 @@ class NominationForm {
         // Handle radio buttons
         if (nomination.selfNomination) {
             document.querySelector(`input[name="selfNomination"][value="${nomination.selfNomination}"]`).checked = true;
+            // Update acceptance status when loading nomination data
+            this.updateAcceptanceStatus();
         }
         
         // Handle checkboxes
