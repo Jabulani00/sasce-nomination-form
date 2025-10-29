@@ -66,8 +66,8 @@ class BallotSystem {
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 
-                // Filter for approved nominations only
-                if (data.status === 'approved') {
+                // Show only candidates approved by admin and accepted by nominee
+                if (data.status === 'approved' && data.acceptanceStatus === 'Accepted') {
                     this.candidates.push({
                         id: doc.id,
                         candidateName: `${data.firstName} ${data.surname}`,

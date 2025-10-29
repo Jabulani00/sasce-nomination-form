@@ -63,7 +63,7 @@ class ElectionSummary {
         this.candidates = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            if (data.status === 'approved') {
+            if (data.status === 'approved' && data.acceptanceStatus === 'Accepted') {
                 this.candidates.push({
                     id: doc.id,
                     candidateName: `${data.firstName} ${data.surname}`,

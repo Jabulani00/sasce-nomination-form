@@ -6,6 +6,8 @@ class NominationForm {
         this.formData = {};
         this.nominations = []; // Array to store multiple nominations
         this.selectedNominationIndex = -1;
+        this.isEditing = false;
+        this.editingIndex = -1;
         this.initializeEventListeners();
         this.updateProgress();
         this.showSection(1);
@@ -219,6 +221,7 @@ class NominationForm {
         if (this.currentSection === this.totalSections) {
             nextBtn.style.display = 'none';
             addNominationBtn.style.display = 'block';
+            addNominationBtn.textContent = this.isEditing ? 'Save Changes' : 'Move Forward';
             submitBtn.style.display = 'none';
         } else {
             nextBtn.style.display = 'block';
@@ -381,8 +384,16 @@ class NominationForm {
                 formData.profilePictureFileType = formData.profilePictureFile.type;
             }
             
-            // Add nomination to the array
-            this.nominations.push(formData);
+            if (this.isEditing && this.editingIndex > -1) {
+                // Update existing nomination
+                this.nominations[this.editingIndex] = formData;
+                this.isEditing = false;
+                this.editingIndex = -1;
+            } else {
+                // Add nomination to the array
+                this.nominations.push(formData);
+            }
+            this.saveNominationsToLocalStorage();
             
             // Clear the form for next nomination
             this.clearForm();
@@ -556,6 +567,10 @@ class NominationForm {
         // Load the selected nomination data into the form
         const nomination = this.nominations[this.selectedNominationIndex];
         this.loadNominationIntoForm(nomination);
+        this.isEditing = true;
+        this.editingIndex = this.selectedNominationIndex;
+        this.currentSection = this.totalSections;
+        this.updateNavigationButtons();
         
         // Hide summary and show form
         document.getElementById('nominationsSummary').style.display = 'none';
@@ -574,6 +589,7 @@ class NominationForm {
         if (confirm('Are you sure you want to remove this nomination?')) {
             this.nominations.splice(this.selectedNominationIndex, 1);
             this.selectedNominationIndex = -1;
+            this.saveNominationsToLocalStorage();
             
             if (this.nominations.length === 0) {
                 // No more nominations, go back to form
@@ -587,26 +603,82 @@ class NominationForm {
     }
 
     loadNominationIntoForm(nomination) {
-        // Load all form fields
+        // Reset the form first
+        const form = document.getElementById('nominationForm');
+        form.reset();
+
+        // Populate standard inputs and radios
         Object.keys(nomination).forEach(key => {
-            const field = document.querySelector(`[name="${key}"]`);
-            if (field && field.type !== 'file') {
-                field.value = nomination[key] || '';
+            const elements = document.querySelectorAll(`[name="${key}"]`);
+            if (!elements || elements.length === 0) return;
+
+            const value = nomination[key];
+
+            // Radio group
+            if (elements[0].type === 'radio') {
+                elements.forEach(el => {
+                    el.checked = (el.value === value);
+                });
+                return;
+            }
+
+            // Skip file inputs
+            if (elements[0].type === 'file') return;
+
+            if (elements.length === 1 && !Array.isArray(value)) {
+                elements[0].value = value || '';
             }
         });
-        
-        // Handle radio buttons
-        if (nomination.selfNomination) {
-            document.querySelector(`input[name="selfNomination"][value="${nomination.selfNomination}"]`).checked = true;
-            // Update acceptance status when loading nomination data
-            this.updateAcceptanceStatus();
-        }
-        
-        // Handle checkboxes
-        // Note: nomineeAcceptance section was removed
-        
-        // Update acceptance text
+
+        // Populate membership table arrays
+        this.populateMembershipTable(
+            nomination.membershipInstitution,
+            nomination.membershipDesignation,
+            nomination.membershipNumber
+        );
+
+        // Derived UI
+        this.updateAcceptanceStatus();
         this.updateAcceptanceText();
+    }
+
+    populateMembershipTable(institutions, designations, numbers) {
+        const body = document.getElementById('membershipTableBody');
+        if (!body) return;
+
+        // Clear existing rows
+        while (body.firstChild) {
+            body.removeChild(body.firstChild);
+        }
+
+        const rows = Math.max(
+            Array.isArray(institutions) ? institutions.length : 0,
+            Array.isArray(designations) ? designations.length : 0,
+            Array.isArray(numbers) ? numbers.length : 0,
+            1
+        );
+
+        for (let i = 0; i < rows; i++) {
+            const tr = document.createElement('tr');
+            const instVal = Array.isArray(institutions) ? (institutions[i] || '') : '';
+            const desigVal = Array.isArray(designations) ? (designations[i] || '') : '';
+            const numVal = Array.isArray(numbers) ? (numbers[i] || '') : '';
+            tr.innerHTML = `
+                <td><input type=\"text\" name=\"membershipInstitution[]\" placeholder=\"Institution name\" value=\"${instVal}\"></td>
+                <td><input type=\"text\" name=\"membershipDesignation[]\" placeholder=\"Designation\" value=\"${desigVal}\"></td>
+                <td><input type=\"text\" name=\"membershipNumber[]\" placeholder=\"Membership number\" value=\"${numVal}\"></td>
+                <td><button type=\"button\" class=\"btn-remove-membership\" onclick=\"removeMembershipRow(this)\">Remove</button></td>
+            `;
+            body.appendChild(tr);
+        }
+    }
+
+    saveNominationsToLocalStorage() {
+        try {
+            localStorage.setItem('sasce_nominations', JSON.stringify(this.nominations || []));
+        } catch (e) {
+            // no-op
+        }
     }
 
     formatPositionName(position) {
@@ -659,8 +731,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Countdown Timer Function
 function initCountdownTimer() {
-    // Set the target date to November 14, 2025
-    const targetDate = new Date('2025-11-14T23:59:59').getTime();
+    // Set the target date to November 14, 2025 at 12:00 (noon)
+    const targetDate = new Date('2025-11-14T12:00:00').getTime();
     
     function updateCountdown() {
         const now = new Date().getTime();
