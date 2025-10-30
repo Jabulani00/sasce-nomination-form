@@ -13,8 +13,8 @@
             <div class="logo-container">
                 <img src="logo.png" alt="SASCE Logo" class="sasce-logo">
             </div>
-            <h1>2026/2027
-                Election of office bearers
+            <h1>
+                Election of 2026/2027 office bearers
                 </h1>
             <p class="subtitle">Complete this form to nominate a candidate for election to the SASCE Board.</p>
             <div class="membership-notice">
@@ -76,7 +76,7 @@
                 <div class="section-content">
                     <div class="criteria-content">
                         <p>When considering nominating members to serve on the SASCE Board, the following governance standards supported by King IV should be considered:</p>
-                        <ul>
+                        <ol type="I">
                             <li>Any member in good standing is eligible to nominate or be nominated to serve as a SASCE Elected Official</li>
                             <li>An appropriate mix of knowledge, skills, and experience is required of each nominee, including requisite business acumen and industry experience necessary to govern SASCE.</li>
                             <li>The need for elected members who qualify to lead other functional sub-committees.</li>
@@ -84,7 +84,7 @@
                             <li>The need to comply with legislative and statutory requirements relating to diversity in the composition of the SASCE Board, in terms of gender, race, and skills.</li>
                             <li>The need to have a succession plan in place to ensure continuity and sustainability of SASCE operations.</li>
                             <li>The need for candidates that have a broad and extensive network, with capacity to organise and mobilise resources for the benefit of SASCE.</li>
-                        </ul>
+                        </ol>
                     </div>
                 </div>
             </section>
@@ -215,12 +215,52 @@
                             <input type="text" id="jobTitle" name="jobTitle" required>
                         </div>
                         <div class="form-group full-width">
-                            <label for="qualifications">Certificates / Tertiary Qualifications</label>
-                            <textarea id="qualifications" name="qualifications" rows="3" placeholder="List your qualifications and certifications"></textarea>
+                            <label>Certificates / Tertiary Qualifications</label>
+                            <div class="membership-table-container">
+                                <table class="membership-table" id="qualificationsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Qualification</th>
+                                            <th>Institution</th>
+                                            <th>Year Awarded</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="qualificationsTableBody">
+                                        <tr>
+                                            <td><input type="text" name="qualificationName[]" placeholder="e.g., BSc in Education"></td>
+                                            <td><input type="text" name="qualificationInstitution[]" placeholder="Institution"></td>
+                                            <td><input type="text" name="qualificationYear[]" placeholder="Year"></td>
+                                            <td><button type="button" class="btn-remove-membership" onclick="removeQualificationRow(this)">Remove</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn-add-membership" onclick="addQualificationRow()">Add Another Qualification</button>
+                            </div>
                         </div>
                         <div class="form-group full-width">
-                            <label for="pastThreeRoles">Past three positions / relevant roles</label>
-                            <textarea id="pastThreeRoles" name="pastThreeRoles" rows="3" placeholder="List and describe your past three career roles"></textarea>
+                            <label>Past three positions / relevant roles</label>
+                            <div class="membership-table-container">
+                                <table class="membership-table" id="pastRolesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Role/Position</th>
+                                            <th>Organisation</th>
+                                            <th>Duration</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pastRolesTableBody">
+                                        <tr>
+                                            <td><input type="text" name="roleTitle[]" placeholder="e.g., WIL Coordinator"></td>
+                                            <td><input type="text" name="roleOrganisation[]" placeholder="Organisation"></td>
+                                            <td><input type="text" name="roleDuration[]" placeholder="e.g., 2019–2022"></td>
+                                            <td><button type="button" class="btn-remove-membership" onclick="removePastRoleRow(this)">Remove</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn-add-membership" onclick="addPastRoleRow()">Add Another Role</button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="profilePicture">Profile Picture (Upload)</label>
@@ -270,8 +310,26 @@
                         </div>
                         
                         <div class="form-group full-width">
-                            <label for="careerHighlights">Career Highlights / Awards</label>
-                            <textarea id="careerHighlights" name="careerHighlights" rows="3" placeholder="List any career highlights, awards, or achievements"></textarea>
+                            <label>Career Highlights / Awards</label>
+                            <div class="membership-table-container">
+                                <table class="membership-table" id="careerHighlightsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Highlight / Award</th>
+                                            <th>Year</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="careerHighlightsTableBody">
+                                        <tr>
+                                            <td><input type="text" name="careerHighlightTitle[]" placeholder="e.g., Excellence in CE Award"></td>
+                                            <td><input type="text" name="careerHighlightYear[]" placeholder="Year"></td>
+                                            <td><button type="button" class="btn-remove-membership" onclick="removeCareerHighlightRow(this)">Remove</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <button type="button" class="btn-add-membership" onclick="addCareerHighlightRow()">Add Another Highlight</button>
+                            </div>
                         </div>
                         
                         <div class="form-group full-width">
@@ -292,11 +350,16 @@
                         
                         <!-- Nominee's Experience with CE and WIL -->
                         <div class="form-group full-width">
-                            <label>Nominee's experience with CE* and WIL#</label>
+                            <label>Nominee's experience with Cooperative Education (CE) and Work-Integrated Learning (WIL)</label>
                             <div class="experience-section">
                                 <div class="experience-category">
                                     <h4>As WIL- or Career facilitator:</h4>
                                     <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="wilFacilitatorExperience" value="none">
+                                            <span class="radio-custom"></span>
+                                            0 / N/A
+                                        </label>
                                         <label class="radio-label">
                                             <input type="radio" name="wilFacilitatorExperience" value="1-3yrs">
                                             <span class="radio-custom"></span>
@@ -319,6 +382,11 @@
                                     <h4>As WIL lecturer/researcher:</h4>
                                     <div class="radio-group">
                                         <label class="radio-label">
+                                            <input type="radio" name="wilLecturerExperience" value="none">
+                                            <span class="radio-custom"></span>
+                                            0 / N/A
+                                        </label>
+                                        <label class="radio-label">
                                             <input type="radio" name="wilLecturerExperience" value="1-3yrs">
                                             <span class="radio-custom"></span>
                                             1-3yrs
@@ -339,6 +407,11 @@
                                 <div class="experience-category">
                                     <h4>As a WIL Host/Mentor:</h4>
                                     <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="wilHostExperience" value="none">
+                                            <span class="radio-custom"></span>
+                                            0 / N/A
+                                        </label>
                                         <label class="radio-label">
                                             <input type="radio" name="wilHostExperience" value="1-3yrs">
                                             <span class="radio-custom"></span>
@@ -361,6 +434,11 @@
                                     <h4>As a CE or WIL Sponsor, Funder or Volunteer:</h4>
                                     <div class="radio-group">
                                         <label class="radio-label">
+                                            <input type="radio" name="ceWilSponsorExperience" value="none">
+                                            <span class="radio-custom"></span>
+                                            0 / N/A
+                                        </label>
+                                        <label class="radio-label">
                                             <input type="radio" name="ceWilSponsorExperience" value="1-3yrs">
                                             <span class="radio-custom"></span>
                                             1-3yrs
@@ -378,9 +456,62 @@
                                     </div>
                                 </div>
                                 
+                                <div class="experience-category">
+                                    <h4>Volunteer / Beneficiary:</h4>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="volunteerBeneficiaryDuration" value="upto6">
+                                            <span class="radio-custom"></span>
+                                            Up to 6 months
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="volunteerBeneficiaryDuration" value="6to12">
+                                            <span class="radio-custom"></span>
+                                            6–12 months
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="volunteerBeneficiaryDuration" value="12to18">
+                                            <span class="radio-custom"></span>
+                                            12–18 months
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="volunteerBeneficiaryDuration" value="over18">
+                                            <span class="radio-custom"></span>
+                                            Over 18 months
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="experience-category">
+                                    <h4>Internship / WIL Apprenticeship:</h4>
+                                    <div class="radio-group">
+                                        <label class="radio-label">
+                                            <input type="radio" name="internshipWilDuration" value="upto6">
+                                            <span class="radio-custom"></span>
+                                            Up to 6 months
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="internshipWilDuration" value="6to12">
+                                            <span class="radio-custom"></span>
+                                            6–12 months
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="internshipWilDuration" value="12to18">
+                                            <span class="radio-custom"></span>
+                                            12–18 months
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="internshipWilDuration" value="over18">
+                                            <span class="radio-custom"></span>
+                                            Over 18 months
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <div class="experience-note">
                                     <p><small><em>*Cooperative Education | #Work-Integrated Learning</em></small></p>
                                     <p><small><em>Note: You can select experience in one or all categories. For example: "I've been a WIL host for over 10yrs and also a WIL facilitator for 4yrs"</em></small></p>
+                                    <p><small><em>Example: "I’ve been a WIL student while facilitating for 2 years. Will host for 2+ years."</em></small></p>
                                 </div>
                             </div>
                         </div>
@@ -406,6 +537,9 @@
                                 <li>Career details and qualifications are provided</li>
                             </ul>
                         </div>
+                        <p style="margin-top: 10px; color: #2c3e50;">
+                            Now you can forward the nomination form to the nominee. If you wish to remain anonymous, the nomination form will be forwarded to the nominee on your behalf.
+                        </p>
                     </div>
                 </div>
             </section>
@@ -482,6 +616,68 @@
         function removeMembershipRow(button) {
             const row = button.closest('tr');
             const tableBody = document.getElementById('membershipTableBody');
+            if (tableBody.children.length > 1) {
+                row.remove();
+            }
+        }
+
+        // Qualifications table functions
+        function addQualificationRow() {
+            const tableBody = document.getElementById('qualificationsTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type=\"text\" name=\"qualificationName[]\" placeholder=\"e.g., BSc in Education\"></td>
+                <td><input type=\"text\" name=\"qualificationInstitution[]\" placeholder=\"Institution\"></td>
+                <td><input type=\"text\" name=\"qualificationYear[]\" placeholder=\"Year\"></td>
+                <td><button type=\"button\" class=\"btn-remove-membership\" onclick=\"removeQualificationRow(this)\">Remove</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function removeQualificationRow(button) {
+            const row = button.closest('tr');
+            const tableBody = document.getElementById('qualificationsTableBody');
+            if (tableBody.children.length > 1) {
+                row.remove();
+            }
+        }
+
+        // Past roles table functions
+        function addPastRoleRow() {
+            const tableBody = document.getElementById('pastRolesTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type=\"text\" name=\"roleTitle[]\" placeholder=\"e.g., WIL Coordinator\"></td>
+                <td><input type=\"text\" name=\"roleOrganisation[]\" placeholder=\"Organisation\"></td>
+                <td><input type=\"text\" name=\"roleDuration[]\" placeholder=\"e.g., 2019–2022\"></td>
+                <td><button type=\"button\" class=\"btn-remove-membership\" onclick=\"removePastRoleRow(this)\">Remove</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function removePastRoleRow(button) {
+            const row = button.closest('tr');
+            const tableBody = document.getElementById('pastRolesTableBody');
+            if (tableBody.children.length > 1) {
+                row.remove();
+            }
+        }
+
+        // Career highlights table functions
+        function addCareerHighlightRow() {
+            const tableBody = document.getElementById('careerHighlightsTableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type=\"text\" name=\"careerHighlightTitle[]\" placeholder=\"e.g., Excellence in CE Award\"></td>
+                <td><input type=\"text\" name=\"careerHighlightYear[]\" placeholder=\"Year\"></td>
+                <td><button type=\"button\" class=\"btn-remove-membership\" onclick=\"removeCareerHighlightRow(this)\">Remove</button></td>
+            `;
+            tableBody.appendChild(newRow);
+        }
+
+        function removeCareerHighlightRow(button) {
+            const row = button.closest('tr');
+            const tableBody = document.getElementById('careerHighlightsTableBody');
             if (tableBody.children.length > 1) {
                 row.remove();
             }

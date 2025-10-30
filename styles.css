@@ -320,6 +320,19 @@ input[type="file"]:hover {
     margin-bottom: 15px;
 }
 
+/* Criteria ordered list (Roman numerals) */
+.criteria-content ol {
+    margin-left: 24px;
+    margin-bottom: 15px;
+    list-style-type: upper-roman; /* ensure visibility even if HTML type changes */
+    list-style-position: outside;
+}
+
+.criteria-content ol li::marker {
+    color: #3A6B9C;
+    font-weight: 700;
+}
+
 .rules-content li,
 .criteria-content li {
     margin-bottom: 8px;

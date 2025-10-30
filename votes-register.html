@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SASCE Voting Registration</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    /* Page-specific responsive and UX improvements */
+    .container { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .form-header { text-align: center; }
+    .sasce-logo { max-height: 56px; width: auto; }
+
+    /* Section visuals */
+    .form-section { border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+    .form-section + .form-section { margin-top: 16px; }
+    .section-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; }
+    .section-content { padding: 16px 20px; }
+
+    /* Grid defaults (enhances existing styles if present) */
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .form-group.full-width { grid-column: 1 / -1; }
+
+    /* Voter entry card styling */
+    .voter-entry { border: 1px dashed #e5e7eb; border-radius: 10px; padding: 12px; background:#fafafa; }
+    .voter-entry .form-group { margin: 0; }
+
+    /* Actions */
+    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-actions .btn { min-height: 40px; }
+
+    /* Remaining votes indicator */
+    .votes-indicator { display: inline-flex; gap: 6px; align-items: center; background:#f9fafb; border:1px solid #e5e7eb; padding:6px 10px; border-radius: 999px; font-size: 0.9rem; }
+
+    /* Inputs */
+    .form-group input, .form-group select { width: 100%; min-height: 42px; }
+
+    /* Mobile-first adjustments */
+    @media (max-width: 900px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-actions .btn { width: 100%; }
+      .section-content { padding: 14px; }
+      .section-header { padding: 12px 14px; }
+    }
+
+    @media (max-width: 420px) {
+      .sasce-logo { max-height: 44px; }
+      .form-section { border-radius: 8px; }
+    }
+  </style>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    // === Firebase Configuration ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+      authDomain: "facilio-app.firebaseapp.com",
+      projectId: "facilio-app",
+      storageBucket: "facilio-app.firebasestorage.app",
+      messagingSenderId: "515454562817",
+      appId: "1:515454562817:web:1f89da18665af2b67e0600",
+      measurementId: "G-981TTX1T68"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // === Submit Handler ===
+    async function submitForm(e) {
+      e.preventDefault();
+
+      const membershipNumberEl = document.getElementById("membershipNumber");
+      const organizationEl = document.getElementById("organization");
+      const membershipTypeEl = document.getElementById("membershipType");
+
+      // Basic manual validation to avoid native constraint issues
+      if (!membershipNumberEl.value.trim()) {
+        alert("Please enter Membership Number.");
+        membershipNumberEl.focus();
+        return;
+      }
+      if (!organizationEl.value.trim()) {
+        alert("Please enter Organization Name.");
+        organizationEl.focus();
+        return;
+      }
+      if (!membershipTypeEl.value) {
+        alert("Please select a Membership Type.");
+        membershipTypeEl.focus();
+        return;
+      }
+
+      const membershipType = membershipTypeEl.value;
+      const totalVotes = membershipType === "Platinum" ? 5 : 1;
+      const voterCount = document.querySelectorAll(".voter-entry").length;
+
+      let voters = [];
+      for (let i = 0; i < voterCount; i++) {
+        const name = document.getElementById(`name-${i}`).value;
+        const email = document.getElementById(`email-${i}`).value;
+        const votes = Number(document.getElementById(`votes-${i}`).value);
+        if (!name.trim() || !email.trim() || !votes) {
+          alert("Each voter must have a name, email, and at least 1 vote.");
+          return;
+        }
+        voters.push({ name, email, votes });
+      }
+
+      const totalAllocated = voters.reduce((sum, v) => sum + v.votes, 0);
+      if (totalAllocated > totalVotes) {
+        alert(`⚠️ You have allocated ${totalAllocated} votes, exceeding the allowed ${totalVotes}.`);
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "sasce_voters"), {
+          membershipNumber: membershipNumberEl.value,
+          organization: organizationEl.value,
+          membershipType,
+          totalVotes,
+          allocatedVotes: totalAllocated,
+          voters,
+          status: "Pending",
+          timestamp: new Date().toISOString(),
+        });
+
+        alert("✅ Registration submitted successfully!\nStatus: Pending Review");
+        document.getElementById("regForm").reset();
+        document.getElementById("votersContainer").innerHTML = "";
+      } catch (err) {
+        console.error("Error saving data:", err);
+        alert("❌ Failed to submit. Please try again.");
+      }
+    }
+
+    // === Vote Limit Helpers ===
+    function getAllowedVotes() {
+      const membershipType = document.getElementById("membershipType").value;
+      if (membershipType === "Platinum") return 5;
+      if (membershipType === "Corporate") return 1;
+      if (membershipType === "Individual") return 1;
+      return 0;
+    }
+
+    function getAllocatedVotes() {
+      const inputs = Array.from(document.querySelectorAll("[id^=votes-]"));
+      return inputs.reduce((sum, input) => sum + Number(input.value || 0), 0);
+    }
+
+    function updateRemainingUI() {
+      const allowed = getAllowedVotes();
+      const allocated = getAllocatedVotes();
+      const remaining = Math.max(allowed - allocated, 0);
+      const allowedEl = document.getElementById("allowedVotes");
+      const remainingEl = document.getElementById("remainingVotes");
+      if (allowedEl) allowedEl.textContent = String(allowed);
+      if (remainingEl) remainingEl.textContent = String(remaining);
+
+      // Update max attribute for each votes input to reflect remaining space + its own current value
+      const voteInputs = Array.from(document.querySelectorAll("[id^=votes-]"));
+      voteInputs.forEach((input) => {
+        const current = Number(input.value || 0);
+        input.min = "1";
+        input.max = String(Math.max(current + remaining, 1));
+      });
+    }
+
+    function onVotesInputChanged(e) {
+      const allowed = getAllowedVotes();
+      if (allowed === 0) {
+        // No membership selected yet
+        e.target.value = 1;
+        updateRemainingUI();
+        return;
+      }
+
+      const voteInputs = Array.from(document.querySelectorAll("[id^=votes-]"));
+      const othersSum = voteInputs
+        .filter((el) => el !== e.target)
+        .reduce((sum, el) => sum + Number(el.value || 0), 0);
+
+      let allowedForThis = Math.max(allowed - othersSum, 0);
+      let desired = Number(e.target.value || 0);
+      if (desired < 1) desired = 1;
+      if (desired > allowedForThis) desired = allowedForThis;
+      e.target.value = String(desired || 1);
+      updateRemainingUI();
+    }
+
+    // === Add New Voter Row ===
+    function addVoter() {
+      const allowed = getAllowedVotes();
+      const allocated = getAllocatedVotes();
+      if (allowed === 0) {
+        alert("Please select a Membership Type first.");
+        return;
+      }
+      if (allocated >= allowed) {
+        alert("All votes have been allocated. You cannot add more voters.");
+        return;
+      }
+
+      const container = document.getElementById("votersContainer");
+      const index = container.children.length;
+      const row = document.createElement("div");
+      row.className = "voter-entry form-grid";
+      const remaining = Math.max(allowed - allocated, 0);
+      const defaultVotes = Math.min(1, remaining);
+      row.innerHTML = `
+        <div class="form-group"><label>Full Name *</label><input id="name-${index}" name="voterName[${index}]" required></div>
+        <div class="form-group"><label>Email *</label><input id="email-${index}" name="voterEmail[${index}]" type="email" required></div>
+        <div class="form-group"><label>Votes *</label><input id="votes-${index}" name="voterVotes[${index}]" type="number" min="1" max="${remaining}" value="${defaultVotes}" required></div>
+        <div class="form-group"><label>&nbsp;</label><button type="button" class="btn btn-danger" onclick="removeVoter(${index})"><i class=\"fas fa-trash\"></i> Remove</button></div>
+      `;
+      container.appendChild(row);
+
+      const votesInput = document.getElementById(`votes-${index}`);
+      votesInput.addEventListener("input", onVotesInputChanged);
+
+      updateRemainingUI();
+    }
+
+    function removeVoter(index) {
+      const container = document.getElementById("votersContainer");
+      const row = container.children[index];
+      if (!row) return;
+      row.remove();
+
+      // Re-index remaining rows to keep IDs sequential
+      const rows = Array.from(container.children);
+      rows.forEach((r, newIdx) => {
+        const nameInput = r.querySelector(`[id^=name-]`);
+        const emailInput = r.querySelector(`[id^=email-]`);
+        const votesInput = r.querySelector(`[id^=votes-]`);
+        const removeBtn = r.querySelector("button.btn.btn-danger");
+
+        if (nameInput) { nameInput.id = `name-${newIdx}`; nameInput.name = `voterName[${newIdx}]`; }
+        if (emailInput) { emailInput.id = `email-${newIdx}`; emailInput.name = `voterEmail[${newIdx}]`; }
+        if (votesInput) {
+          votesInput.id = `votes-${newIdx}`;
+          votesInput.name = `voterVotes[${newIdx}]`;
+          votesInput.removeEventListener("input", onVotesInputChanged);
+          votesInput.addEventListener("input", onVotesInputChanged);
+        }
+        if (removeBtn) removeBtn.setAttribute("onclick", `removeVoter(${newIdx})`);
+      });
+
+      updateRemainingUI();
+    }
+
+    // Expose functions for inline HTML handlers (because this script uses type="module")
+    window.addVoter = addVoter;
+    window.submitForm = submitForm;
+    window.removeVoter = removeVoter;
+
+    // === Initialize listeners ===
+    window.addEventListener("DOMContentLoaded", () => {
+      const membershipTypeEl = document.getElementById("membershipType");
+      membershipTypeEl.addEventListener("change", () => {
+        // Reset voters when membership type changes to avoid invalid allocations
+        document.getElementById("votersContainer").innerHTML = "";
+        updateRemainingUI();
+        // Ensure at least one voter row to make allocation obvious
+        addVoter();
+      });
+      // Provide an initial voter row to guide users on mobile
+      addVoter();
+      updateRemainingUI();
+    });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <header class="form-header">
+      <div class="logo-container">
+        <img src="logo.png" alt="SASCE Logo" class="sasce-logo">
+      </div>
+      <h1>SASCE Voting Registration</h1>
+      <p class="subtitle">Only eligible representatives may register for voting. Platinum members may allocate up to <strong>5</strong> votes flexibly.</p>
+    </header>
+
+    <form id="regForm" onsubmit="submitForm(event)" class="nomination-form" novalidate>
+      <section class="form-section active">
+        <div class="section-header">
+          <h2>Organisation Details</h2>
+        </div>
+        <div class="section-content">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label>Membership Number *</label>
+              <input id="membershipNumber" name="membershipNumber" required>
+            </div>
+            <div class="form-group full-width">
+              <label>Organization Name *</label>
+              <input id="organization" name="organization" required>
+            </div>
+            <div class="form-group full-width">
+              <label>Membership Type *</label>
+              <select id="membershipType" name="membershipType" required>
+                <option value="">-- Select Type --</option>
+                <option value="Platinum">Platinum (5 Votes)</option>
+                <option value="Corporate">Corporate (1 Vote)</option>
+                <option value="Individual">Individual (1 Vote)</option>
+              </select>
+            </div>
+            <div class="form-group full-width">
+              <span class="votes-indicator">
+                <i class="fas fa-balance-scale-left" aria-hidden="true"></i>
+                <span>Remaining: <strong id="remainingVotes">0</strong> / <span id="allowedVotes">0</span></span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section active">
+        <div class="section-header">
+          <h2>Eligible Voters</h2>
+        </div>
+        <div class="section-content">
+          <div id="votersContainer" class="form-grid"></div>
+          <div class="form-actions">
+            <button type="button" onclick="addVoter()" class="btn btn-primary"><i class="fas fa-user-plus"></i> Add Eligible Voter</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-success">Submit Registration</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

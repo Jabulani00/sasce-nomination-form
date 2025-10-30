@@ -212,10 +212,7 @@
         <div class="detail-grid" id="experienceInfo"></div>
       </div>
 
-      <div class="detail-section">
-        <h3>Nominator Information</h3>
-        <div class="detail-grid" id="nominatorInfo"></div>
-      </div>
+      
     </div>
 
     <div class="accept-statement" id="statement">
@@ -227,14 +224,11 @@
       </p>
     </div>
 
-    <form id="acceptanceForm">
-      <div class="choices">
-        <label><input type="radio" name="decision" value="accept" required /> Accept</label>
-        <label><input type="radio" name="decision" value="deny" /> Deny</label>
-      </div>
-
-      <button type="submit" class="btn btn-success">Submit</button>
-    </form>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+      <button id="editBtn" class="btn btn-secondary" style="width:auto;">Edit Information</button>
+      <button id="acceptBtn" class="btn btn-success" style="width:auto;">Accept</button>
+      <button id="rejectBtn" class="btn btn-danger" style="width:auto;">Reject</button>
+    </div>
   </div>
 
   <div id="confirmationScreen" style="display:none;">
@@ -274,7 +268,9 @@
     const id = qs('id');
     const token = qs('token');
     const nomineeSummary = document.getElementById('nomineeSummary');
-    const form = document.getElementById('acceptanceForm');
+    const editBtn = document.getElementById('editBtn');
+    const acceptBtn = document.getElementById('acceptBtn');
+    const rejectBtn = document.getElementById('rejectBtn');
 
     let nominationData = null;
 
@@ -290,8 +286,194 @@
       return positionMap[position] || position;
     }
 
+    function getPositionOptions(selectedValue) {
+      const positions = [
+        'president',
+        'deputy-president',
+        'general-secretary',
+        'deputy-general-secretary',
+        'treasurer',
+        'deputy-treasurer'
+      ];
+      return positions.map(p => `<option value="${p}" ${p === selectedValue ? 'selected' : ''}>${formatPositionName(p)}</option>`).join('');
+    }
+
     function createDetailItem(label, value) {
       return `<div class="detail-item"><div class="detail-label">${label}</div><div class="detail-value">${value || 'N/A'}</div></div>`;
+    }
+
+    function createInputItem(id, label, value, type = 'text') {
+      const control = type === 'textarea'
+        ? `<textarea id="${id}" class="input" rows="3">${value || ''}</textarea>`
+        : `<input id="${id}" class="input" type="${type}" value="${value || ''}">`;
+      return `<div class="detail-item"><div class="detail-label">${label}</div>${control}</div>`;
+    }
+
+    let isEditing = false;
+
+    function renderDetails(editable) {
+      const d = nominationData || {};
+      // Personal Information
+      document.getElementById('personalInfo').innerHTML = editable ? [
+        createInputItem('edit_firstName', 'First Name', d.firstName || ''),
+        createInputItem('edit_surname', 'Surname', d.surname || ''),
+        createInputItem('edit_email', 'Email', d.email || '', 'email'),
+        createInputItem('edit_phone', 'Phone', d.phone || ''),
+        createInputItem('edit_jobTitle', 'Job Title/Company', d.jobTitle || ''),
+        createInputItem('edit_membershipNumber', 'Organization/Membership', d.membershipNumber || ''),
+        `<div class="detail-item"><div class="detail-label">Position Nominated</div><select id="edit_positionNominated" class="input">${getPositionOptions(d.positionNominated || '')}</select></div>`
+      ].join('') : [
+        createDetailItem('Full Name', `${d.firstName || ''} ${d.surname || ''}`),
+        createDetailItem('Email', d.email || ''),
+        createDetailItem('Phone', d.phone || ''),
+        createDetailItem('Job Title/Company', d.jobTitle || ''),
+        createDetailItem('Organization/Membership', d.membershipNumber || ''),
+        createDetailItem('Position Nominated', formatPositionName(d.positionNominated))
+      ].join('');
+
+      // Career & Qualifications
+      document.getElementById('careerInfo').innerHTML = editable ? [
+        createInputItem('edit_qualifications', 'Qualifications', d.qualifications || '', 'textarea'),
+        createInputItem('edit_pastThreeRoles', 'Past Three Roles', d.pastThreeRoles || '', 'textarea'),
+        createInputItem('edit_careerHighlights', 'Career Highlights/Awards', d.careerHighlights || '', 'textarea'),
+        createInputItem('edit_cvBioText', 'CV/Bio Text', d.cvBioText || '', 'textarea'),
+        createInputItem('edit_cvBioLink', 'CV/Bio Link', d.cvBioLink || '')
+      ].join('') : [
+        createDetailItem('Qualifications', d.qualifications || ''),
+        createDetailItem('Past Three Roles', d.pastThreeRoles || ''),
+        createDetailItem('Career Highlights/Awards', d.careerHighlights || ''),
+        createDetailItem('CV/Bio Text', d.cvBioText ? (d.cvBioText.length > 200 ? d.cvBioText.substring(0, 200) + '...' : d.cvBioText) : ''),
+        createDetailItem('CV/Bio Link', d.cvBioLink ? `<a href="${d.cvBioLink}" target="_blank">View CV/Bio</a>` : ''),
+        createDetailItem('Profile Picture', d.profilePictureFileName ? `Uploaded: ${d.profilePictureFileName}` : '')
+      ].join('');
+
+      // Professional Memberships (support up to 3 rows for simplicity)
+      const inst = Array.isArray(d.membershipInstitution) ? d.membershipInstitution : [];
+      const desig = Array.isArray(d.membershipDesignation) ? d.membershipDesignation : [];
+      const nums = Array.isArray(d.membershipNumber) ? d.membershipNumber : [];
+      if (editable) {
+        const rows = Array.from({ length: Math.max(1, inst.length, desig.length, nums.length, 3) }, (_, idx) => {
+          return `
+            <tr>
+              <td><input id="edit_membershipInstitution_${idx}" class="input" value="${inst[idx] || ''}"></td>
+              <td><input id="edit_membershipDesignation_${idx}" class="input" value="${desig[idx] || ''}"></td>
+              <td><input id="edit_membershipNumber_${idx}" class="input" value="${nums[idx] || ''}"></td>
+            </tr>
+          `;
+        }).join('');
+        document.getElementById('membershipsInfo').innerHTML = `
+          <table class="membership-table">
+            <thead>
+              <tr>
+                <th>Institution</th>
+                <th>Designation</th>
+                <th>Membership Number</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      } else {
+        const membershipsHtml = inst.length > 0 || desig.length > 0 || nums.length > 0 ? `
+          <table class="membership-table">
+            <thead>
+              <tr>
+                <th>Institution</th>
+                <th>Designation</th>
+                <th>Membership Number</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${inst.map((v, idx) => `
+                <tr>
+                  <td>${v || ''}</td>
+                  <td>${desig[idx] || ''}</td>
+                  <td>${nums[idx] || ''}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        ` : '<div class="detail-value">No memberships provided</div>';
+        document.getElementById('membershipsInfo').innerHTML = membershipsHtml;
+      }
+
+      // Experience & Eligibility
+      document.getElementById('experienceInfo').innerHTML = editable ? [
+        createInputItem('edit_infrastructureSupport', 'Infrastructure Support (yes/no)', d.infrastructureSupport || ''),
+        createInputItem('edit_wilFacilitatorExperience', 'WIL/Career Facilitator', d.wilFacilitatorExperience || ''),
+        createInputItem('edit_wilLecturerExperience', 'WIL Lecturer/Researcher', d.wilLecturerExperience || ''),
+        createInputItem('edit_wilHostExperience', 'WIL Host/Mentor', d.wilHostExperience || ''),
+        createInputItem('edit_ceWilSponsorExperience', 'CE/WIL Sponsor/Funder/Volunteer', d.ceWilSponsorExperience || '')
+      ].join('') : [
+        createDetailItem('Infrastructure Support', d.infrastructureSupport === 'yes' ? 'Yes' : d.infrastructureSupport === 'no' ? 'No' : ''),
+        createDetailItem('WIL/Career Facilitator', d.wilFacilitatorExperience || ''),
+        createDetailItem('WIL Lecturer/Researcher', d.wilLecturerExperience || ''),
+        createDetailItem('WIL Host/Mentor', d.wilHostExperience || ''),
+        createDetailItem('CE/WIL Sponsor/Funder/Volunteer', d.ceWilSponsorExperience || '')
+      ].join('');
+    }
+
+    function collectEditedData() {
+      if (!isEditing) return {};
+      const get = (id) => {
+        const el = document.getElementById(id);
+        return el ? el.value : undefined;
+      };
+      const base = nominationData || {};
+      const updates = {};
+      const addIfChanged = (key, newVal) => {
+        if (typeof newVal === 'undefined') return;
+        const oldVal = base[key];
+        if (newVal !== oldVal) {
+          updates[key] = newVal;
+        }
+      };
+
+      addIfChanged('firstName', get('edit_firstName'));
+      addIfChanged('surname', get('edit_surname'));
+      addIfChanged('email', get('edit_email'));
+      addIfChanged('phone', get('edit_phone'));
+      addIfChanged('jobTitle', get('edit_jobTitle'));
+      addIfChanged('membershipNumber', get('edit_membershipNumber'));
+      addIfChanged('positionNominated', get('edit_positionNominated'));
+      addIfChanged('qualifications', get('edit_qualifications'));
+      addIfChanged('pastThreeRoles', get('edit_pastThreeRoles'));
+      addIfChanged('careerHighlights', get('edit_careerHighlights'));
+      addIfChanged('cvBioText', get('edit_cvBioText'));
+      addIfChanged('cvBioLink', get('edit_cvBioLink'));
+      addIfChanged('infrastructureSupport', get('edit_infrastructureSupport'));
+      addIfChanged('wilFacilitatorExperience', get('edit_wilFacilitatorExperience'));
+      addIfChanged('wilLecturerExperience', get('edit_wilLecturerExperience'));
+      addIfChanged('wilHostExperience', get('edit_wilHostExperience'));
+      addIfChanged('ceWilSponsorExperience', get('edit_ceWilSponsorExperience'));
+
+      // Membership arrays (read up to 10 rows)
+      const maxRows = 10;
+      const inst = [];
+      const desig = [];
+      const nums = [];
+      for (let i = 0; i < maxRows; i++) {
+        const vi = get(`edit_membershipInstitution_${i}`);
+        const vd = get(`edit_membershipDesignation_${i}`);
+        const vn = get(`edit_membershipNumber_${i}`);
+        if (vi || vd || vn) {
+          inst.push(vi || '');
+          desig.push(vd || '');
+          nums.push(vn || '');
+        }
+      }
+      const anyMembershipInput = inst.length || desig.length || nums.length;
+      if (anyMembershipInput) {
+        const same = JSON.stringify(inst) === JSON.stringify(base.membershipInstitution || []) &&
+                     JSON.stringify(desig) === JSON.stringify(base.membershipDesignation || []) &&
+                     JSON.stringify(nums) === JSON.stringify(base.membershipNumber || []);
+        if (!same) {
+          updates.membershipInstitution = inst;
+          updates.membershipDesignation = desig;
+          updates.membershipNumber = nums;
+        }
+      }
+      return updates;
     }
 
     async function loadNomination(){
@@ -315,67 +497,8 @@
         <div><strong>Job Title:</strong> ${data.jobTitle || ''}</div>
       `;
 
-      // Personal Information
-      document.getElementById('personalInfo').innerHTML = [
-        createDetailItem('Full Name', `${data.firstName || ''} ${data.surname || ''}`),
-        createDetailItem('Email', data.email || ''),
-        createDetailItem('Phone', data.phone || ''),
-        createDetailItem('Job Title/Company', data.jobTitle || ''),
-        createDetailItem('Organization/Membership', data.membershipNumber || ''),
-        createDetailItem('Position Nominated', formatPositionName(data.positionNominated))
-      ].join('');
-
-      // Career & Qualifications
-      document.getElementById('careerInfo').innerHTML = [
-        createDetailItem('Qualifications', data.qualifications || ''),
-        createDetailItem('Past Three Roles', data.pastThreeRoles || ''),
-        createDetailItem('Career Highlights/Awards', data.careerHighlights || ''),
-        createDetailItem('CV/Bio Text', data.cvBioText ? (data.cvBioText.length > 200 ? data.cvBioText.substring(0, 200) + '...' : data.cvBioText) : ''),
-        createDetailItem('CV/Bio Link', data.cvBioLink ? `<a href="${data.cvBioLink}" target="_blank">View CV/Bio</a>` : ''),
-        createDetailItem('Profile Picture', data.profilePictureFileName ? `Uploaded: ${data.profilePictureFileName}` : '')
-      ].join('');
-
-      // Professional Memberships
-      const membershipsHtml = Array.isArray(data.membershipInstitution) && data.membershipInstitution.length > 0 ? `
-        <table class="membership-table">
-          <thead>
-            <tr>
-              <th>Institution</th>
-              <th>Designation</th>
-              <th>Membership Number</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${data.membershipInstitution.map((inst, idx) => `
-              <tr>
-                <td>${inst || ''}</td>
-                <td>${(data.membershipDesignation && data.membershipDesignation[idx]) || ''}</td>
-                <td>${(data.membershipNumber && data.membershipNumber[idx]) || ''}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      ` : '<div class="detail-value">No memberships provided</div>';
-      document.getElementById('membershipsInfo').innerHTML = membershipsHtml;
-
-      // Experience & Eligibility
-      document.getElementById('experienceInfo').innerHTML = [
-        createDetailItem('Infrastructure Support', data.infrastructureSupport === 'yes' ? 'Yes' : data.infrastructureSupport === 'no' ? 'No' : ''),
-        createDetailItem('WIL/Career Facilitator', data.wilFacilitatorExperience || ''),
-        createDetailItem('WIL Lecturer/Researcher', data.wilLecturerExperience || ''),
-        createDetailItem('WIL Host/Mentor', data.wilHostExperience || ''),
-        createDetailItem('CE/WIL Sponsor/Funder/Volunteer', data.ceWilSponsorExperience || '')
-      ].join('');
-
-      // Nominator Information
-      document.getElementById('nominatorInfo').innerHTML = [
-        createDetailItem('Nominator Name', `${data.nominatorFirstName || ''} ${data.nominatorSurname || ''}`),
-        createDetailItem('Nominator Email', data.nominatorEmail || ''),
-        createDetailItem('Nominator Phone', data.nominatorPhone || ''),
-        createDetailItem('Nominator Organization', data.nominatorMembershipNumber || ''),
-        createDetailItem('Nomination Type', data.selfNomination === 'self' ? 'Self Nomination' : 'Third-Party Nomination'),
-        createDetailItem('Submitted At', data.submittedAt ? new Date(data.submittedAt.seconds * 1000).toLocaleString() : '')
-      ].join('');
+      // Render details
+      renderDetails(false);
 
       // Show details section
       document.getElementById('nominationDetails').style.display = 'block';
@@ -416,27 +539,47 @@
       document.getElementById('confirmationScreen').style.display = 'block';
     }
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const choice = form.decision.value;
-      if(!nominationData){ alert('Nomination not loaded.'); return; }
-      
+    editBtn.addEventListener('click', () => {
+      if (!nominationData) return;
+      isEditing = !isEditing;
+      editBtn.textContent = isEditing ? 'Cancel Editing' : 'Edit Information';
+      renderDetails(isEditing);
+    });
+
+    let submitting = false;
+    function setButtonsDisabled(disabled) {
+      [editBtn, acceptBtn, rejectBtn].forEach(btn => { if (btn) btn.disabled = disabled; });
+    }
+
+    async function submitDecision(choice) {
+      if (!nominationData) { alert('Nomination not loaded.'); return; }
+      if (submitting) return; // prevent duplicate submissions
+      submitting = true;
+      setButtonsDisabled(true);
       try {
         const ref = doc(db, 'nominations', id);
         const acceptanceStatus = choice === 'accept' ? 'Accepted' : 'Denied';
-        await updateDoc(ref, {
-          acceptanceStatus,
-          acceptanceRespondedAt: new Date()
-        });
-        
-        // Show confirmation screen instead of alert
+        const updates = { acceptanceStatus, acceptanceRespondedAt: new Date() };
+        if (isEditing) {
+          Object.assign(updates, collectEditedData());
+        }
+        await updateDoc(ref, updates);
+        if (isEditing) {
+          // refresh local data with edits for confirmation details
+          nominationData = { ...nominationData, ...updates };
+        }
         showConfirmationScreen(choice);
-        
       } catch (error) {
         console.error('Error updating nomination:', error);
         alert('There was an error recording your response. Please try again.');
+      } finally {
+        submitting = false;
+        setButtonsDisabled(false);
       }
-    });
+    }
+
+    acceptBtn.addEventListener('click', () => submitDecision('accept'));
+    rejectBtn.addEventListener('click', () => submitDecision('deny'));
 
     loadNomination();
   </script>

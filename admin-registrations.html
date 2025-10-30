@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SASCE Voting Registrations – Admin Review</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .registrations-table th, .registrations-table td { white-space: nowrap; }
+    .voters-list { font-size: 0.9rem; line-height: 1.4; }
+    .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:0.75rem; font-weight:600; }
+    .pill.pending { background:#fff4e5; color:#b45309; border:1px solid #fbbf24; }
+    .pill.approved { background:#e6f4ea; color:#256e3b; border:1px solid #7AAE92; }
+    .pill.rejected { background:#fdecea; color:#9b1c1c; border:1px solid #f5c6cb; }
+
+    /* Table container for horizontal scroll on small screens */
+    .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #e5e7eb; border-radius: 10px; background:#fff; }
+    .registrations-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .registrations-table thead th { position: sticky; top: 0; background: #f9fafb; z-index: 1; }
+    .registrations-table th, .registrations-table td { padding: 10px 12px; }
+    .table-info { font-size: 0.9rem; color:#6b7280; }
+
+    /* Controls layout improvements */
+    .search-box { border:1px solid #e5e7eb; border-radius: 8px; padding: 8px 10px; background:#fff; }
+    #searchInput { border: none; outline: none; width: 100%; min-height: 38px; }
+    .form-actions { display:flex; gap:10px; flex-wrap: wrap; }
+    .form-actions .btn { min-height: 40px; }
+
+    @media (max-width: 1000px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-actions .btn { width: 100%; }
+    }
+
+    @media (max-width: 480px) {
+      .registrations-table th:nth-child(6),
+      .registrations-table td:nth-child(6) { white-space: normal; }
+      .registrations-table th, .registrations-table td { padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <admin-nav active="voters"></admin-nav>
+    <header class="form-header">
+      <h1>Voting Registrations – Admin Review</h1>
+      <p class="subtitle">Review and approve organization voting registrations</p>
+    </header>
+
+    <section class="form-section active">
+      <div class="section-header">
+        <h2>Controls</h2>
+      </div>
+      <div class="section-content">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Search</label>
+            <div class="search-box" style="display:flex; gap:10px; align-items:center;">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Search by org, membership number, or voter email...">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Membership Type</label>
+            <select id="typeFilter">
+              <option value="">All Types</option>
+              <option value="Platinum">Platinum</option>
+              <option value="Corporate">Corporate</option>
+              <option value="Individual">Individual</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="statusFilter">
+              <option value="">All Status</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button id="refreshBtn" class="btn btn-secondary"><i class="fas fa-sync-alt"></i> Refresh</button>
+          <button id="exportExcelBtn" class="btn btn-success"><i class="fas fa-file-excel"></i> Export to Excel</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section active">
+      <div class="section-header">
+        <h2>Registrations</h2>
+        <div class="table-info"><span id="tableInfo">Loading registrations...</span></div>
+      </div>
+      <div class="section-content">
+        <div class="table-responsive">
+        <table class="membership-table registrations-table">
+          <thead>
+            <tr>
+              <th>Org</th>
+              <th>Membership #</th>
+              <th>Type</th>
+              <th>Votes</th>
+              <th>Allocated</th>
+              <th>Voters</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="9" style="text-align:center; padding:16px;"><i class="fas fa-spinner fa-spin"></i> Loading registrations...</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </section>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+      <div class="loading-content">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Processing...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="nav.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+      authDomain: "facilio-app.firebaseapp.com",
+      projectId: "facilio-app",
+      storageBucket: "facilio-app.firebasestorage.app",
+      messagingSenderId: "515454562817",
+      appId: "1:515454562817:web:1f89da18665af2b67e0600",
+      measurementId: "G-981TTX1T68"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const $ = (id) => document.getElementById(id);
+    const tableBody = $("tableBody");
+    const tableInfo = $("tableInfo");
+    const loadingOverlay = $("loadingOverlay");
+    const searchInput = $("searchInput");
+    const typeFilter = $("typeFilter");
+    const statusFilter = $("statusFilter");
+    const refreshBtn = $("refreshBtn");
+    const exportExcelBtn = $("exportExcelBtn");
+
+    let cache = [];
+
+    function formatDate(iso) {
+      try { return new Date(iso).toLocaleString(); } catch { return iso || ""; }
+    }
+
+    function renderRows(rows) {
+      if (!rows.length) {
+        tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:16px;">No registrations found</td></tr>`;
+        tableInfo.textContent = "0 registrations";
+        return;
+      }
+      const html = rows.map(r => {
+        const votersHtml = (r.voters || []).map(v => `${v.name} <small>(&lt;${v.email}&gt;)</small> – ${v.votes}`).join('<br>');
+        const pillClass = (r.status || 'Pending').toLowerCase();
+        return `
+          <tr>
+            <td>${r.organization || ''}</td>
+            <td>${r.membershipNumber || ''}</td>
+            <td>${r.membershipType || ''}</td>
+            <td>${r.totalVotes ?? ''}</td>
+            <td>${r.allocatedVotes ?? ''}</td>
+            <td class="voters-list">${votersHtml}</td>
+            <td><span class="pill ${pillClass}">${r.status || 'Pending'}</span></td>
+            <td>${formatDate(r.timestamp)}</td>
+            <td>
+              <button class="btn btn-success" data-action="approve" data-id="${r._id}"><i class="fas fa-check"></i></button>
+              <button class="btn btn-danger" data-action="reject" data-id="${r._id}"><i class="fas fa-times"></i></button>
+            </td>
+          </tr>`;
+      }).join('');
+      tableBody.innerHTML = html;
+      tableInfo.textContent = `${rows.length} registration${rows.length === 1 ? '' : 's'}`;
+    }
+
+    function applyFilters() {
+      const q = (searchInput.value || '').toLowerCase();
+      const fType = typeFilter.value;
+      const fStatus = statusFilter.value;
+      const filtered = cache.filter(r => {
+        const hay = `${r.organization} ${r.membershipNumber} ${(r.voters||[]).map(v=>v.email).join(' ')}`.toLowerCase();
+        const okQ = !q || hay.includes(q);
+        const okType = !fType || r.membershipType === fType;
+        const okStatus = !fStatus || (r.status || 'Pending') === fStatus;
+        return okQ && okType && okStatus;
+      });
+      renderRows(filtered);
+    }
+
+    async function loadRegistrations() {
+      tableBody.innerHTML = `<tr><td colspan="9" class="loading-row"><i class=\"fas fa-spinner fa-spin\"></i> Loading registrations...</td></tr>`;
+      const qRef = query(collection(db, 'sasce_voters'), orderBy('timestamp', 'desc'));
+      const snap = await getDocs(qRef);
+      cache = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
+      applyFilters();
+    }
+
+    async function setStatus(id, status) {
+      loadingOverlay.style.display = 'flex';
+      try {
+        await updateDoc(doc(db, 'sasce_voters', id), { status });
+        const item = cache.find(x => x._id === id);
+        if (item) item.status = status;
+        applyFilters();
+      } catch (e) {
+        alert('Failed to update status.');
+        console.error(e);
+      } finally {
+        loadingOverlay.style.display = 'none';
+      }
+    }
+
+    tableBody.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      if (action === 'approve') setStatus(id, 'Approved');
+      if (action === 'reject') setStatus(id, 'Rejected');
+    });
+
+    searchInput.addEventListener('input', applyFilters);
+    typeFilter.addEventListener('change', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+    refreshBtn.addEventListener('click', loadRegistrations);
+
+    exportExcelBtn.addEventListener('click', () => {
+      if (!window.XLSX) {
+        alert('Excel export library not loaded');
+        return;
+      }
+      const rows = cache.map(r => ({
+        Organization: r.organization || '',
+        MembershipNumber: r.membershipNumber || '',
+        MembershipType: r.membershipType || '',
+        TotalVotes: r.totalVotes ?? '',
+        AllocatedVotes: r.allocatedVotes ?? '',
+        Status: r.status || 'Pending',
+        Submitted: formatDate(r.timestamp),
+        Voters: (r.voters || []).map(v => `${v.name} <${v.email}>(${v.votes})`).join('; '),
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
+      XLSX.writeFile(wb, 'sasce_voting_registrations.xlsx');
+    });
+
+    // Load XLSX
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    document.body.appendChild(script);
+
+    loadRegistrations();
+  </script>
+</body>
+</html>
+
+

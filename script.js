@@ -269,6 +269,15 @@ class NominationForm {
             this.showFieldError(document.getElementById('cvBioLink'), 'Please provide at least one option: text or link');
             return false;
         }
+
+        // Enforce 100-word limit on CV/Bio text
+        if (cvBioText) {
+            const words = cvBioText.split(/\s+/).filter(Boolean);
+            if (words.length > 100) {
+                this.showFieldError(document.getElementById('cvBioText'), `Limit 100 words (current: ${words.length})`);
+                return false;
+            }
+        }
         
         // Clear any existing errors
         this.clearFieldError(document.getElementById('cvBioText'));
@@ -422,11 +431,17 @@ class NominationForm {
         
         try {
             // Submit all nominations to Firestore
+            const acceptanceLinks = [];
             for (let i = 0; i < this.nominations.length; i++) {
-                await this.saveToFirestore(this.nominations[i]);
+                const res = await this.saveToFirestore(this.nominations[i]);
+                if (res && res.id && res.token) {
+                    const basePath = location.origin + location.pathname.replace(/[^/]*$/, '');
+                    const link = `${basePath}accept.html?id=${encodeURIComponent(res.id)}&token=${encodeURIComponent(res.token)}`;
+                    acceptanceLinks.push({ link, nominee: `${this.nominations[i].firstName || ''} ${this.nominations[i].surname || ''}`.trim() });
+                }
             }
-            
-            this.showSuccessMessage();
+
+            this.showForwardPrompt(acceptanceLinks);
             
         } catch (error) {
             console.error('Error submitting nominations:', error);
@@ -459,7 +474,8 @@ class NominationForm {
         const cleanData = {
             ...firestoreData,
             submittedAt: new Date(),
-            status: 'pending'
+            status: 'pending',
+            acceptanceToken: Math.random().toString(36).slice(2) + Date.now().toString(36)
         };
         
         // Remove any remaining File objects or undefined values
@@ -469,7 +485,111 @@ class NominationForm {
             }
         });
         
-        await addDoc(nominationsRef, cleanData);
+        const docRef = await addDoc(nominationsRef, cleanData);
+        return { id: docRef.id, token: cleanData.acceptanceToken };
+    }
+
+    showForwardOptions(links, messageText) {
+        const summary = document.getElementById('nominationsSummary');
+        const container = document.createElement('div');
+        container.className = 'success-message show';
+        container.innerHTML = `
+            <h3 style="margin-bottom:10px;"><i class="fas fa-share-square"></i> Share Acceptance Links</h3>
+            <p style="margin-bottom:10px; color:#2c3e50;">${messageText || 'Now you can forward the nomination form to the nominee. If you wish to remain anonymous, the nomination form will be forwarded to the nominee on your behalf.'}</p>
+            <div id="shareLinks"></div>
+        `;
+        summary.parentNode.insertBefore(container, summary);
+        summary.style.display = 'none';
+
+        const shareLinksDiv = container.querySelector('#shareLinks');
+        links.forEach(({ link, nominee }, idx) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.flexWrap = 'wrap';
+            row.style.gap = '8px';
+            row.style.alignItems = 'center';
+            row.style.marginBottom = '10px';
+            row.innerHTML = `
+                <div style="font-weight:600; color:#3A6B9C; min-width: 160px;">Nominee ${idx + 1}${nominee ? `: ${nominee}` : ''}</div>
+                <input type="text" value="${link}" readonly style="flex:1; min-width:220px; padding:8px; border:1px solid #e1e8ed; border-radius:6px;">
+                <button type="button" class="btn btn-info" data-action="copy">Copy Link</button>
+                <a class="btn btn-primary" target="_blank" data-action="email">Email</a>
+                <a class="btn btn-success" target="_blank" data-action="whatsapp">WhatsApp</a>
+            `;
+            shareLinksDiv.appendChild(row);
+
+            const input = row.querySelector('input');
+            const copyBtn = row.querySelector('[data-action="copy"]');
+            const emailBtn = row.querySelector('[data-action="email"]');
+            const waBtn = row.querySelector('[data-action="whatsapp"]');
+
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(link);
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => copyBtn.textContent = 'Copy Link', 1500);
+                } catch {}
+            });
+
+            const subject = encodeURIComponent('SASCE Nomination Acceptance');
+            const body = encodeURIComponent(`Please review and respond to your SASCE nomination:\n${link}`);
+            emailBtn.href = `mailto:?subject=${subject}&body=${body}`;
+
+            const waText = encodeURIComponent(`Please review and respond to your SASCE nomination: ${link}`);
+            waBtn.href = `https://wa.me/?text=${waText}`;
+        });
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    showForwardPrompt(links) {
+        const summary = document.getElementById('nominationsSummary');
+        const prompt = document.createElement('div');
+        prompt.className = 'success-message show';
+        prompt.innerHTML = `
+            <h3 style="margin-bottom:10px;"><i class="fas fa-user-secret"></i> Would you like to remain anonymous?</h3>
+            <p style="margin-bottom:12px; color:#2c3e50;">Your identity can be hidden when forwarding the acceptance form. Choose an option below.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                <button type="button" class="btn btn-success" data-action="anon-yes">Yes, remain anonymous</button>
+                <button type="button" class="btn btn-warning" data-action="anon-no">No </button>
+            </div>
+        `;
+        summary.parentNode.insertBefore(prompt, summary);
+        summary.style.display = 'none';
+
+        const anonYesBtn = prompt.querySelector('[data-action="anon-yes"]');
+        const anonNoBtnFixed = prompt.querySelector('[data-action="anon-no"]');
+
+        anonYesBtn.addEventListener('click', () => {
+            prompt.remove();
+            this.showForwardOptions(links, 'You chose to remain anonymous. Use the options below to share the acceptance link without revealing your identity.');
+        });
+
+        anonNoBtnFixed.addEventListener('click', () => {
+            prompt.innerHTML = `
+                <h3 style="margin-bottom:10px;"><i class="fas fa-paper-plane"></i> Send the form to the nominee?</h3>
+                <p style="margin-bottom:12px; color:#2c3e50;">You chose not to remain anonymous. Do you want to generate the shareable link now and send it to the nominee?</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
+                    <button type="button" class="btn btn-primary" data-action="send-now">Generate Shareable Links</button>
+                    <button type="button" class="btn btn-secondary" data-action="skip">Skip</button>
+                </div>
+            `;
+
+            const sendNowBtn = prompt.querySelector('[data-action="send-now"]');
+            const skipBtn2 = prompt.querySelector('[data-action="skip"]');
+
+            sendNowBtn.addEventListener('click', () => {
+                prompt.remove();
+                this.showForwardOptions(links, 'You chose not to remain anonymous. Use the options below to share the acceptance link directly with the nominee.');
+            });
+            skipBtn2.addEventListener('click', () => {
+                prompt.remove();
+                this.showSuccessMessage();
+            });
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     clearForm() {
