@@ -212,17 +212,80 @@ class AdminPanel {
             <div class="detail-section">
                 <h4><i class="fas fa-briefcase"></i> Career Information</h4>
                 <div class="detail-grid">
-                    <div class="detail-item">
+                    <div class="detail-item" style="grid-column: 1 / -1;">
                         <div class="detail-label">Qualifications</div>
-                        <div class="detail-value">${nomination.qualifications || 'N/A'}</div>
+                        ${Array.isArray(nomination.qualificationName) && nomination.qualificationName.length > 0 ? `
+                        <div class="table-wrapper">
+                            <table class="nominations-table">
+                                <thead>
+                                    <tr>
+                                        <th>Qualification</th>
+                                        <th>Institution</th>
+                                        <th>Year Awarded</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${nomination.qualificationName.map((q, idx) => `
+                                        <tr>
+                                            <td>${q || ''}</td>
+                                            <td>${(nomination.qualificationInstitution && nomination.qualificationInstitution[idx]) || ''}</td>
+                                            <td>${(nomination.qualificationYear && nomination.qualificationYear[idx]) || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        ` : '<div class="detail-value">N/A</div>'}
                     </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Past Three Roles</div>
-                        <div class="detail-value">${nomination.pastThreeRoles || 'N/A'}</div>
+
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <div class="detail-label">Past Roles</div>
+                        ${Array.isArray(nomination.roleTitle) && nomination.roleTitle.length > 0 ? `
+                        <div class="table-wrapper">
+                            <table class="nominations-table">
+                                <thead>
+                                    <tr>
+                                        <th>Role/Position</th>
+                                        <th>Organisation</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${nomination.roleTitle.map((r, idx) => `
+                                        <tr>
+                                            <td>${r || ''}</td>
+                                            <td>${(nomination.roleOrganisation && nomination.roleOrganisation[idx]) || ''}</td>
+                                            <td>${(nomination.roleDuration && nomination.roleDuration[idx]) || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        ` : '<div class="detail-value">N/A</div>'}
                     </div>
-                    <div class="detail-item">
+
+                    <div class="detail-item" style="grid-column: 1 / -1;">
                         <div class="detail-label">Career Highlights / Awards</div>
-                        <div class="detail-value">${nomination.careerHighlights || 'N/A'}</div>
+                        ${Array.isArray(nomination.careerHighlightTitle) && nomination.careerHighlightTitle.length > 0 ? `
+                        <div class="table-wrapper">
+                            <table class="nominations-table">
+                                <thead>
+                                    <tr>
+                                        <th>Highlight / Award</th>
+                                        <th>Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${nomination.careerHighlightTitle.map((h, idx) => `
+                                        <tr>
+                                            <td>${h || ''}</td>
+                                            <td>${(nomination.careerHighlightYear && nomination.careerHighlightYear[idx]) || ''}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        ` : '<div class="detail-value">N/A</div>'}
                     </div>
                 </div>
             </div>
@@ -399,9 +462,9 @@ class AdminPanel {
             'Acceptance Status': nomination.acceptanceStatus || 'Pending',
             'Nominator Name': `${nomination.nominatorFirstName} ${nomination.nominatorSurname}`,
             'Nominator Organization': nomination.nominatorMembershipNumber || '',
-            'Past Three Roles': nomination.pastThreeRoles || '',
-            'Career Highlights / Awards': nomination.careerHighlights || '',
-            'Qualifications': nomination.qualifications || '',
+            'Qualifications': (Array.isArray(nomination.qualificationName) ? nomination.qualificationName.map((q, idx) => `${q || ''}${(nomination.qualificationInstitution && nomination.qualificationInstitution[idx]) ? ` – ${nomination.qualificationInstitution[idx]}` : ''}${(nomination.qualificationYear && nomination.qualificationYear[idx]) ? ` – ${nomination.qualificationYear[idx]}` : ''}`).filter(Boolean).join('; ') : ''),
+            'Past Roles': (Array.isArray(nomination.roleTitle) ? nomination.roleTitle.map((r, idx) => `${r || ''}${(nomination.roleOrganisation && nomination.roleOrganisation[idx]) ? ` at ${nomination.roleOrganisation[idx]}` : ''}${(nomination.roleDuration && nomination.roleDuration[idx]) ? ` (${nomination.roleDuration[idx]})` : ''}`).filter(Boolean).join('; ') : ''),
+            'Career Highlights / Awards': (Array.isArray(nomination.careerHighlightTitle) ? nomination.careerHighlightTitle.map((h, idx) => `${h || ''}${(nomination.careerHighlightYear && nomination.careerHighlightYear[idx]) ? ` (${nomination.careerHighlightYear[idx]})` : ''}`).filter(Boolean).join('; ') : ''),
             'CV/Bio Text': nomination.cvBioText ? nomination.cvBioText.substring(0, 500) : '',
             'CV/Bio Link': nomination.cvBioLink || '',
             'Profile Picture': nomination.profilePictureFileName || '',
