@@ -333,25 +333,119 @@
 
       // Career & Qualifications
       document.getElementById('careerInfo').innerHTML = editable ? [
-        createInputItem('edit_qualifications', 'Qualifications', d.qualifications || '', 'textarea'),
-        createInputItem('edit_pastThreeRoles', 'Past Three Roles', d.pastThreeRoles || '', 'textarea'),
-        createInputItem('edit_careerHighlights', 'Career Highlights/Awards', d.careerHighlights || '', 'textarea'),
+        `<div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Career Highlights / Awards</div>
+          <table class="membership-table" id="highlightsTable">
+            <thead>
+              <tr>
+                <th>Highlight / Award</th>
+                <th>Year</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(() => {
+                const titles = Array.isArray(d.careerHighlightTitle) ? d.careerHighlightTitle : [];
+                const years = Array.isArray(d.careerHighlightYear) ? d.careerHighlightYear : [];
+                const rows = Math.max(1, titles.length);
+                return Array.from({ length: rows }).map((_, idx) => `
+                  <tr>
+                    <td><input class="input hl-title" placeholder="e.g., Excellence in CE Award" value="${titles[idx] || ''}"></td>
+                    <td><input class="input hl-year" placeholder="Year" value="${years[idx] || ''}"></td>
+                    <td><button type="button" class="btn btn-secondary btn-remove-row">Remove</button></td>
+                  </tr>
+                `).join('');
+              })()}
+            </tbody>
+          </table>
+          <div style="margin-top:8px;"><button type="button" class="btn btn-primary" id="addHighlightBtn" style="width:auto;">Add Another Highlight</button></div>
+        </div>`,
+        `<div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Certificates / Tertiary Qualifications</div>
+          <table class="membership-table" id="qualificationsTable">
+            <thead>
+              <tr>
+                <th>Qualification</th>
+                <th>Institution</th>
+                <th>Year Awarded</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(() => {
+                const names = Array.isArray(d.qualificationName) ? d.qualificationName : [];
+                const insts = Array.isArray(d.qualificationInstitution) ? d.qualificationInstitution : [];
+                const years = Array.isArray(d.qualificationYear) ? d.qualificationYear : [];
+                const rows = Math.max(1, names.length);
+                return Array.from({ length: rows }).map((_, idx) => `
+                  <tr>
+                    <td><input class="input q-name" placeholder="e.g., BSc in Education" value="${names[idx] || ''}"></td>
+                    <td><input class="input q-inst" placeholder="Institution" value="${insts[idx] || ''}"></td>
+                    <td><input class="input q-year" placeholder="Year" value="${years[idx] || ''}"></td>
+                    <td><button type="button" class="btn btn-secondary btn-remove-row">Remove</button></td>
+                  </tr>
+                `).join('');
+              })()}
+            </tbody>
+          </table>
+          <div style="margin-top:8px;"><button type="button" class="btn btn-primary" id="addQualificationBtn" style="width:auto;">Add Another Qualification</button></div>
+        </div>`,
+        `<div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Past Three Positions / Relevant Roles</div>
+          <table class="membership-table" id="rolesTable">
+            <thead>
+              <tr>
+                <th>Role/Position</th>
+                <th>Organisation</th>
+                <th>Duration</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(() => {
+                const titles = Array.isArray(d.roleTitle) ? d.roleTitle : [];
+                const orgs = Array.isArray(d.roleOrganisation) ? d.roleOrganisation : [];
+                const durations = Array.isArray(d.roleDuration) ? d.roleDuration : [];
+                const rows = Math.max(1, titles.length);
+                return Array.from({ length: rows }).map((_, idx) => `
+                  <tr>
+                    <td><input class="input r-title" placeholder="e.g., WIL Coordinator" value="${titles[idx] || ''}"></td>
+                    <td><input class="input r-org" placeholder="Organisation" value="${orgs[idx] || ''}"></td>
+                    <td><input class="input r-dur" placeholder="Duration" value="${durations[idx] || ''}"></td>
+                    <td><button type="button" class="btn btn-secondary btn-remove-row">Remove</button></td>
+                  </tr>
+                `).join('');
+              })()}
+            </tbody>
+          </table>
+          <div style="margin-top:8px;"><button type="button" class="btn btn-primary" id="addRoleBtn" style="width:auto;">Add Another Role</button></div>
+        </div>`,
         createInputItem('edit_cvBioText', 'CV/Bio Text', d.cvBioText || '', 'textarea'),
         createInputItem('edit_cvBioLink', 'CV/Bio Link', d.cvBioLink || '')
       ].join('') : [
-        // Simple text fields (backward compatibility)
-        createDetailItem('Qualifications', d.qualifications || ''),
-        createDetailItem('Past Three Roles', d.pastThreeRoles || ''),
-        createDetailItem('Career Highlights/Awards', d.careerHighlights || ''),
-        createDetailItem('CV/Bio Text', d.cvBioText ? (d.cvBioText.length > 200 ? d.cvBioText.substring(0, 200) + '...' : d.cvBioText) : ''),
-        createDetailItem('CV/Bio Link', d.cvBioLink ? `<a href="${d.cvBioLink}" target="_blank">View CV/Bio</a>` : ''),
-        createDetailItem('Profile Picture', d.profilePictureFileName ? `Uploaded: ${d.profilePictureFileName}` : ''),
-        // Detailed tables (if arrays exist)
-        (
-          Array.isArray(d.qualificationName) && d.qualificationName.length
-        ) ? (
-          `<div class="detail-item" style="grid-column: 1 / -1;">
-            <div class="detail-label">Certificates / Tertiary Qualifications</div>
+        `<div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Career Highlights / Awards</div>
+          ${Array.isArray(d.careerHighlightTitle) && d.careerHighlightTitle.length ? `
+            <table class="membership-table">
+              <thead>
+                <tr>
+                  <th>Highlight / Award</th>
+                  <th>Year</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${d.careerHighlightTitle.map((h, idx) => `
+                  <tr>
+                    <td>${h || ''}</td>
+                    <td>${(d.careerHighlightYear || [])[idx] || ''}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>` : '<div class="detail-value">No highlights provided</div>'}
+        </div>`,
+        `<div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Certificates / Tertiary Qualifications</div>
+          ${Array.isArray(d.qualificationName) && d.qualificationName.length ? `
             <table class="membership-table">
               <thead>
                 <tr>
@@ -369,14 +463,11 @@
                   </tr>
                 `).join('')}
               </tbody>
-            </table>
-          </div>`
-        ) : '' ,
-        (
-          Array.isArray(d.roleTitle) && d.roleTitle.length
-        ) ? (
-          `<div class="detail-item" style="grid-column: 1 / -1;">
-            <div class="detail-label">Past Three Positions / Relevant Roles</div>
+            </table>` : '<div class="detail-value">No qualifications provided</div>'}
+        </div>`,
+        `<div class="detail-item" style="grid-column: 1 / -1;">
+          <div class="detail-label">Past Three Positions / Relevant Roles</div>
+          ${Array.isArray(d.roleTitle) && d.roleTitle.length ? `
             <table class="membership-table">
               <thead>
                 <tr>
@@ -394,32 +485,11 @@
                   </tr>
                 `).join('')}
               </tbody>
-            </table>
-          </div>`
-        ) : '' ,
-        (
-          Array.isArray(d.careerHighlightTitle) && d.careerHighlightTitle.length
-        ) ? (
-          `<div class="detail-item" style="grid-column: 1 / -1;">
-            <div class="detail-label">Career Highlights / Awards</div>
-            <table class="membership-table">
-              <thead>
-                <tr>
-                  <th>Highlight / Award</th>
-                  <th>Year</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${d.careerHighlightTitle.map((h, idx) => `
-                  <tr>
-                    <td>${h || ''}</td>
-                    <td>${(d.careerHighlightYear || [])[idx] || ''}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>`
-        ) : ''
+            </table>` : '<div class="detail-value">No roles provided</div>'}
+        </div>`,
+        createDetailItem('CV/Bio Text', d.cvBioText ? (d.cvBioText.length > 200 ? d.cvBioText.substring(0, 200) + '...' : d.cvBioText) : ''),
+        createDetailItem('CV/Bio Link', d.cvBioLink ? `<a href="${d.cvBioLink}" target="_blank">View CV/Bio</a>` : ''),
+        createDetailItem('Profile Picture', d.profilePictureFileName ? `Uploaded: ${d.profilePictureFileName}` : '')
       ].join('');
 
       // Professional Memberships (support up to 3 rows for simplicity)
@@ -427,26 +497,29 @@
       const desig = Array.isArray(d.membershipDesignation) ? d.membershipDesignation : [];
       const nums = Array.isArray(d.membershipNumber) ? d.membershipNumber : [];
       if (editable) {
-        const rows = Array.from({ length: Math.max(1, inst.length, desig.length, nums.length, 3) }, (_, idx) => {
+        const rows = Array.from({ length: Math.max(1, inst.length, desig.length, nums.length, 1) }, (_, idx) => {
           return `
             <tr>
-              <td><input id="edit_membershipInstitution_${idx}" class="input" value="${inst[idx] || ''}"></td>
-              <td><input id="edit_membershipDesignation_${idx}" class="input" value="${desig[idx] || ''}"></td>
-              <td><input id="edit_membershipNumber_${idx}" class="input" value="${nums[idx] || ''}"></td>
+              <td><input class="input m-inst" placeholder="Institution name" value="${inst[idx] || ''}"></td>
+              <td><input class="input m-desig" placeholder="Designation" value="${desig[idx] || ''}"></td>
+              <td><input class="input m-num" placeholder="Membership number" value="${nums[idx] || ''}"></td>
+              <td><button type="button" class="btn btn-secondary btn-remove-row">Remove</button></td>
             </tr>
           `;
         }).join('');
         document.getElementById('membershipsInfo').innerHTML = `
-          <table class="membership-table">
+          <table class="membership-table" id="membershipsTable">
             <thead>
               <tr>
                 <th>Institution</th>
                 <th>Designation</th>
-                <th>Membership Number</th>
+                <th>Membership Number (if known)</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>${rows}</tbody>
           </table>
+          <div style="margin-top:8px;"><button type="button" class="btn btn-primary" id="addMembershipBtn" style="width:auto;">Add Another Membership</button></div>
         `;
       } else {
         const membershipsHtml = inst.length > 0 || desig.length > 0 || nums.length > 0 ? `
@@ -455,7 +528,7 @@
               <tr>
                 <th>Institution</th>
                 <th>Designation</th>
-                <th>Membership Number</th>
+                <th>Membership Number (if known)</th>
               </tr>
             </thead>
             <tbody>
@@ -532,23 +605,22 @@
       addIfChanged('wilHostExperience', get('edit_wilHostExperience'));
       addIfChanged('ceWilSponsorExperience', get('edit_ceWilSponsorExperience'));
 
-      // Membership arrays (read up to 10 rows)
-      const maxRows = 10;
+      // Membership arrays (dynamic read)
       const inst = [];
       const desig = [];
       const nums = [];
-      for (let i = 0; i < maxRows; i++) {
-        const vi = get(`edit_membershipInstitution_${i}`);
-        const vd = get(`edit_membershipDesignation_${i}`);
-        const vn = get(`edit_membershipNumber_${i}`);
+      const mRows = document.querySelectorAll('#membershipsTable tbody tr');
+      mRows.forEach(row => {
+        const vi = row.querySelector('.m-inst')?.value || '';
+        const vd = row.querySelector('.m-desig')?.value || '';
+        const vn = row.querySelector('.m-num')?.value || '';
         if (vi || vd || vn) {
-          inst.push(vi || '');
-          desig.push(vd || '');
-          nums.push(vn || '');
+          inst.push(vi);
+          desig.push(vd);
+          nums.push(vn);
         }
-      }
-      const anyMembershipInput = inst.length || desig.length || nums.length;
-      if (anyMembershipInput) {
+      });
+      if (mRows.length) {
         const same = JSON.stringify(inst) === JSON.stringify(base.membershipInstitution || []) &&
                      JSON.stringify(desig) === JSON.stringify(base.membershipDesignation || []) &&
                      JSON.stringify(nums) === JSON.stringify(base.membershipNumber || []);
@@ -556,6 +628,79 @@
           updates.membershipInstitution = inst;
           updates.membershipDesignation = desig;
           updates.membershipNumber = nums;
+        }
+      }
+
+      // Qualifications arrays (dynamic read)
+      const qNames = [];
+      const qInsts = [];
+      const qYears = [];
+      const qRows = document.querySelectorAll('#qualificationsTable tbody tr');
+      qRows.forEach(row => {
+        const n = row.querySelector('.q-name')?.value || '';
+        const i = row.querySelector('.q-inst')?.value || '';
+        const y = row.querySelector('.q-year')?.value || '';
+        if (n || i || y) {
+          qNames.push(n);
+          qInsts.push(i);
+          qYears.push(y);
+        }
+      });
+      if (qRows.length) {
+        const same = JSON.stringify(qNames) === JSON.stringify(base.qualificationName || []) &&
+                     JSON.stringify(qInsts) === JSON.stringify(base.qualificationInstitution || []) &&
+                     JSON.stringify(qYears) === JSON.stringify(base.qualificationYear || []);
+        if (!same) {
+          updates.qualificationName = qNames;
+          updates.qualificationInstitution = qInsts;
+          updates.qualificationYear = qYears;
+        }
+      }
+
+      // Roles arrays (dynamic read)
+      const rTitles = [];
+      const rOrgs = [];
+      const rDurs = [];
+      const rRows = document.querySelectorAll('#rolesTable tbody tr');
+      rRows.forEach(row => {
+        const t = row.querySelector('.r-title')?.value || '';
+        const o = row.querySelector('.r-org')?.value || '';
+        const du = row.querySelector('.r-dur')?.value || '';
+        if (t || o || du) {
+          rTitles.push(t);
+          rOrgs.push(o);
+          rDurs.push(du);
+        }
+      });
+      if (rRows.length) {
+        const same = JSON.stringify(rTitles) === JSON.stringify(base.roleTitle || []) &&
+                     JSON.stringify(rOrgs) === JSON.stringify(base.roleOrganisation || []) &&
+                     JSON.stringify(rDurs) === JSON.stringify(base.roleDuration || []);
+        if (!same) {
+          updates.roleTitle = rTitles;
+          updates.roleOrganisation = rOrgs;
+          updates.roleDuration = rDurs;
+        }
+      }
+
+      // Career highlights arrays (dynamic read)
+      const hTitles = [];
+      const hYears = [];
+      const hRows = document.querySelectorAll('#highlightsTable tbody tr');
+      hRows.forEach(row => {
+        const t = row.querySelector('.hl-title')?.value || '';
+        const y = row.querySelector('.hl-year')?.value || '';
+        if (t || y) {
+          hTitles.push(t);
+          hYears.push(y);
+        }
+      });
+      if (hRows.length) {
+        const same = JSON.stringify(hTitles) === JSON.stringify(base.careerHighlightTitle || []) &&
+                     JSON.stringify(hYears) === JSON.stringify(base.careerHighlightYear || []);
+        if (!same) {
+          updates.careerHighlightTitle = hTitles;
+          updates.careerHighlightYear = hYears;
         }
       }
       return updates;
@@ -574,7 +719,7 @@
       const fullName = `${data.firstName || ''} ${data.surname || ''}`.trim();
       nomineeSummary.innerHTML = `
         <div style="margin-bottom: 10px; color:#3A6B9C; font-weight:700;">
-          Dear ${fullName || 'Nominee'}, you have been nominated for the 2026/2027 Election of office bearers.
+          Dear ${fullName || 'Nominee'}, you have been nominated to serve on the 2026-2027 SASCE board .
         </div>
         <div><strong>Nominee:</strong> ${fullName}</div>
         <div><strong>Position:</strong> ${formatPositionName(data.positionNominated)}</div>
@@ -629,6 +774,60 @@
       isEditing = !isEditing;
       editBtn.textContent = isEditing ? 'Cancel Editing' : 'Edit Information';
       renderDetails(isEditing);
+      if (isEditing) {
+        // Add row handlers for dynamic tables
+        const onAddRow = (tableId, rowHtml) => {
+          const tbody = document.querySelector(`#${tableId} tbody`);
+          if (tbody) { tbody.insertAdjacentHTML('beforeend', rowHtml); }
+        };
+        const removeHandler = (e) => {
+          const btn = e.target.closest('.btn-remove-row');
+          if (btn) {
+            const row = btn.closest('tr');
+            if (row && row.parentElement) { row.parentElement.removeChild(row); }
+          }
+        };
+        document.getElementById('membershipsInfo').addEventListener('click', removeHandler);
+        const mAdd = document.getElementById('addMembershipBtn');
+        if (mAdd) mAdd.addEventListener('click', () => onAddRow('membershipsTable', `
+          <tr>
+            <td><input class=\"input m-inst\" placeholder=\"Institution name\"></td>
+            <td><input class=\"input m-desig\" placeholder=\"Designation\"></td>
+            <td><input class=\"input m-num\" placeholder=\"Membership number\"></td>
+            <td><button type=\"button\" class=\"btn btn-secondary btn-remove-row\">Remove</button></td>
+          </tr>
+        `));
+        // Qualifications
+        document.getElementById('careerInfo').addEventListener('click', removeHandler);
+        const qAdd = document.getElementById('addQualificationBtn');
+        if (qAdd) qAdd.addEventListener('click', () => onAddRow('qualificationsTable', `
+          <tr>
+            <td><input class=\"input q-name\" placeholder=\"e.g., BSc in Education\"></td>
+            <td><input class=\"input q-inst\" placeholder=\"Institution\"></td>
+            <td><input class=\"input q-year\" placeholder=\"Year\"></td>
+            <td><button type=\"button\" class=\"btn btn-secondary btn-remove-row\">Remove</button></td>
+          </tr>
+        `));
+        // Roles
+        const rAdd = document.getElementById('addRoleBtn');
+        if (rAdd) rAdd.addEventListener('click', () => onAddRow('rolesTable', `
+          <tr>
+            <td><input class=\"input r-title\" placeholder=\"e.g., WIL Coordinator\"></td>
+            <td><input class=\"input r-org\" placeholder=\"Organisation\"></td>
+            <td><input class=\"input r-dur\" placeholder=\"Duration\"></td>
+            <td><button type=\"button\" class=\"btn btn-secondary btn-remove-row\">Remove</button></td>
+          </tr>
+        `));
+        // Highlights
+        const hAdd = document.getElementById('addHighlightBtn');
+        if (hAdd) hAdd.addEventListener('click', () => onAddRow('highlightsTable', `
+          <tr>
+            <td><input class=\"input hl-title\" placeholder=\"e.g., Excellence in CE Award\"></td>
+            <td><input class=\"input hl-year\" placeholder=\"Year\"></td>
+            <td><button type=\"button\" class=\"btn btn-secondary btn-remove-row\">Remove</button></td>
+          </tr>
+        `));
+      }
     });
 
     let submitting = false;
