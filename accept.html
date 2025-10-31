@@ -339,12 +339,87 @@
         createInputItem('edit_cvBioText', 'CV/Bio Text', d.cvBioText || '', 'textarea'),
         createInputItem('edit_cvBioLink', 'CV/Bio Link', d.cvBioLink || '')
       ].join('') : [
+        // Simple text fields (backward compatibility)
         createDetailItem('Qualifications', d.qualifications || ''),
         createDetailItem('Past Three Roles', d.pastThreeRoles || ''),
         createDetailItem('Career Highlights/Awards', d.careerHighlights || ''),
         createDetailItem('CV/Bio Text', d.cvBioText ? (d.cvBioText.length > 200 ? d.cvBioText.substring(0, 200) + '...' : d.cvBioText) : ''),
         createDetailItem('CV/Bio Link', d.cvBioLink ? `<a href="${d.cvBioLink}" target="_blank">View CV/Bio</a>` : ''),
-        createDetailItem('Profile Picture', d.profilePictureFileName ? `Uploaded: ${d.profilePictureFileName}` : '')
+        createDetailItem('Profile Picture', d.profilePictureFileName ? `Uploaded: ${d.profilePictureFileName}` : ''),
+        // Detailed tables (if arrays exist)
+        (
+          Array.isArray(d.qualificationName) && d.qualificationName.length
+        ) ? (
+          `<div class="detail-item" style="grid-column: 1 / -1;">
+            <div class="detail-label">Certificates / Tertiary Qualifications</div>
+            <table class="membership-table">
+              <thead>
+                <tr>
+                  <th>Qualification</th>
+                  <th>Institution</th>
+                  <th>Year Awarded</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${d.qualificationName.map((q, idx) => `
+                  <tr>
+                    <td>${q || ''}</td>
+                    <td>${(d.qualificationInstitution || [])[idx] || ''}</td>
+                    <td>${(d.qualificationYear || [])[idx] || ''}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`
+        ) : '' ,
+        (
+          Array.isArray(d.roleTitle) && d.roleTitle.length
+        ) ? (
+          `<div class="detail-item" style="grid-column: 1 / -1;">
+            <div class="detail-label">Past Three Positions / Relevant Roles</div>
+            <table class="membership-table">
+              <thead>
+                <tr>
+                  <th>Role/Position</th>
+                  <th>Organisation</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${d.roleTitle.map((t, idx) => `
+                  <tr>
+                    <td>${t || ''}</td>
+                    <td>${(d.roleOrganisation || [])[idx] || ''}</td>
+                    <td>${(d.roleDuration || [])[idx] || ''}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`
+        ) : '' ,
+        (
+          Array.isArray(d.careerHighlightTitle) && d.careerHighlightTitle.length
+        ) ? (
+          `<div class="detail-item" style="grid-column: 1 / -1;">
+            <div class="detail-label">Career Highlights / Awards</div>
+            <table class="membership-table">
+              <thead>
+                <tr>
+                  <th>Highlight / Award</th>
+                  <th>Year</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${d.careerHighlightTitle.map((h, idx) => `
+                  <tr>
+                    <td>${h || ''}</td>
+                    <td>${(d.careerHighlightYear || [])[idx] || ''}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>`
+        ) : ''
       ].join('');
 
       // Professional Memberships (support up to 3 rows for simplicity)
@@ -409,8 +484,18 @@
         createDetailItem('WIL/Career Facilitator', d.wilFacilitatorExperience || ''),
         createDetailItem('WIL Lecturer/Researcher', d.wilLecturerExperience || ''),
         createDetailItem('WIL Host/Mentor', d.wilHostExperience || ''),
-        createDetailItem('CE/WIL Sponsor/Funder/Volunteer', d.ceWilSponsorExperience || '')
+        createDetailItem('CE/WIL Sponsor/Funder/Volunteer', d.ceWilSponsorExperience || ''),
+        createDetailItem('Volunteer / Beneficiary Duration', d.volunteerBeneficiaryDuration || ''),
+        createDetailItem('Internship / WIL Apprenticeship Duration', d.internshipWilDuration || '')
       ].join('');
+      
+      // Add Acceptance Status to Personal Information (view mode only)
+      if (!editable) {
+        const personalInfoEl = document.getElementById('personalInfo');
+        const currentHtml = personalInfoEl.innerHTML;
+        const acceptanceHtml = createDetailItem('Acceptance Status', d.acceptanceStatus || 'Pending');
+        personalInfoEl.innerHTML = currentHtml + acceptanceHtml;
+      }
     }
 
     function collectEditedData() {
