@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Voting Ballot</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        /* Email Container */
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        /* Header Section */
+        .header {
+            background: linear-gradient(135deg, #3A6B9C 0%, #8A74A1 100%);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 16px;
+            margin: 0;
+            opacity: 0.95;
+        }
+        
+        /* Content Section */
+        .content {
+            padding: 30px 25px;
+        }
+        
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        
+        .message {
+            font-size: 15px;
+            line-height: 1.8;
+            color: #333333;
+            margin-bottom: 25px;
+        }
+        
+        .message strong {
+            color: #3A6B9C;
+        }
+        
+        /* Voter Info Box */
+        .voter-info {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3A6B9C;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .voter-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            color: #2c3e50;
+        }
+        
+        .voter-info strong {
+            color: #3A6B9C;
+        }
+        
+        /* Voting Button */
+        .voting-button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .voting-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #7AAE92 0%, #6a9a7e 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 18px 40px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .voting-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        /* Warning Box */
+        .warning-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffeaa7;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .warning-box p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #856404;
+            line-height: 1.6;
+        }
+        
+        .warning-box strong {
+            color: #856404;
+            font-size: 15px;
+        }
+        
+        /* Link Display */
+        .link-display {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            word-break: break-all;
+        }
+        
+        .link-display p {
+            font-size: 12px;
+            color: #666666;
+            margin: 5px 0;
+        }
+        
+        .link-display a {
+            color: #3A6B9C;
+            text-decoration: none;
+            font-size: 11px;
+            word-break: break-all;
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #2c3e50;
+            color: #ffffff;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .footer strong {
+            color: #7BB8D1;
+        }
+        
+        .footer .contact {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .footer .contact p {
+            font-size: 13px;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive Design */
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .email-wrapper {
+                max-width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 20px 15px;
+            }
+            
+            .voting-button {
+                padding: 15px 30px;
+                font-size: 16px;
+                display: block;
+                width: 100%;
+            }
+            
+            .voter-info,
+            .warning-box {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <!-- Header -->
+            <div class="header">
+                <h1>🗳️ SASCE Voting Ballot</h1>
+                <p>2025 Board Election</p>
+            </div>
+            
+            <!-- Content -->
+            <div class="content">
+                <div class="greeting">
+                    Dear <strong>{{voter_name}}</strong>,
+                </div>
+                
+                <div class="message">
+                    <p>You have been approved to vote for the <strong>{{position_name}}</strong> position in the 2025 SASCE Board Election.</p>
+                </div>
+                
+                <!-- Voter Information -->
+                <div class="voter-info">
+                    <p><strong>Organization:</strong> {{organization}}</p>
+                    <p><strong>Membership Number:</strong> {{membership_number}}</p>
+                </div>
+                
+                <div class="message">
+                    <p>Please click the button below to access your unique voting ballot:</p>
+                </div>
+                
+                <!-- Voting Button -->
+                <div class="voting-button-container">
+                    <a href="{{voting_link}}" class="voting-button">Cast Your Vote</a>
+                </div>
+                
+                <!-- Warning Message -->
+                <div class="warning-box">
+                    <p><strong>⚠️ Important:</strong> This link is unique to you and will automatically fill in your voter information. Please do not share this link with anyone else.</p>
+                </div>
+                
+                <!-- Link Display -->
+                <div class="link-display">
+                    <p><strong>If the button doesn't work, copy and paste this link into your browser:</strong></p>
+                    <p><a href="{{voting_link}}">{{voting_link}}</a></p>
+                </div>
+                
+                <div class="message">
+                    <p>Thank you for participating in the SASCE election. Your vote is important to us.</p>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <p><strong>Best regards,</strong></p>
+                <p>SASCE Election Committee</p>
+                
+                <div class="contact">
+                    <p>This is an automated email. Please do not reply to this message.</p>
+                    <p>For support, contact: admin@sasce.net</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

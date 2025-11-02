@@ -40,6 +40,7 @@ class AdminNav extends HTMLElement {
         container.innerHTML = `
             <a href="admin.html" class="${active === 'home' ? 'active' : ''}"><i class="fas fa-home"></i><span>Home</span></a>
             <a href="admin-registrations.html" class="${active === 'voters' ? 'active' : ''}"><i class="fas fa-address-book"></i><span>Voters</span></a>
+            <a href="admin-voting-control.html" class="${active === 'voting' ? 'active' : ''}"><i class="fas fa-mail-bulk"></i><span>Voting Control</span></a>
             <a href="results.html" class="${active === 'results' ? 'active' : ''}"><i class="fas fa-chart-bar"></i><span>Results</span></a>
             <a href="summary.html" class="${active === 'summary' ? 'active' : ''}"><i class="fas fa-list"></i><span>Summary</span></a>
         `;

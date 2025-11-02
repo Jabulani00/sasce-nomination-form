@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SASCE Voting Control – Admin</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <style>
+    .voting-control-section {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .position-selector {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .position-option {
+      padding: 20px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+    
+    .position-option:hover {
+      border-color: #3A6B9C;
+      background: #e8f4fd;
+    }
+    
+    .position-option.selected {
+      border-color: #3A6B9C;
+      background: #e8f4fd;
+      box-shadow: 0 0 0 3px rgba(58, 107, 156, 0.1);
+    }
+    
+    .position-option i {
+      font-size: 2rem;
+      color: #3A6B9C;
+      margin-bottom: 10px;
+    }
+    
+    .position-option h3 {
+      color: #2c3e50;
+      margin: 0;
+      font-size: 1rem;
+    }
+    
+    .email-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .stat-box {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 2px solid #e5e7eb;
+    }
+    
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #3A6B9C;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
+    .email-preview {
+      background: #f8f9fa;
+      border: 2px dashed #bdc3c7;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .email-preview h4 {
+      color: #3A6B9C;
+      margin-bottom: 15px;
+    }
+    
+    .email-preview-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <admin-nav active="voting"></admin-nav>
+    <header class="form-header">
+      <h1><i class="fas fa-mail-bulk"></i> Voting Email Control</h1>
+      <p class="subtitle">Send unique voting links to approved voters</p>
+    </header>
+
+    <section class="voting-control-section">
+      <div class="section-header">
+        <h2>Select Position</h2>
+        <p>Choose which position to open voting for</p>
+      </div>
+      
+      <div class="position-selector">
+        <div class="position-option" data-position="president">
+          <i class="fas fa-crown"></i>
+          <h3>President</h3>
+        </div>
+        <div class="position-option" data-position="deputy-president">
+          <i class="fas fa-user-tie"></i>
+          <h3>Deputy President</h3>
+        </div>
+        <div class="position-option" data-position="general-secretary">
+          <i class="fas fa-file-alt"></i>
+          <h3>General Secretary</h3>
+        </div>
+        <div class="position-option" data-position="deputy-general-secretary">
+          <i class="fas fa-file-signature"></i>
+          <h3>Deputy General Secretary</h3>
+        </div>
+        <div class="position-option" data-position="treasurer">
+          <i class="fas fa-coins"></i>
+          <h3>Treasurer</h3>
+        </div>
+        <div class="position-option" data-position="deputy-treasurer">
+          <i class="fas fa-wallet"></i>
+          <h3>Deputy Treasurer</h3>
+        </div>
+      </div>
+      
+      <div id="selectedPosition" style="display:none; margin-top:20px; padding:15px; background:#e8f4fd; border-radius:8px;">
+        <i class="fas fa-info-circle"></i>
+        <span id="selectedPositionText"></span>
+      </div>
+    </section>
+
+    <section class="voting-control-section" id="statsSection" style="display:none;">
+      <div class="section-header">
+        <h2>Statistics</h2>
+      </div>
+      
+      <div class="email-stats">
+        <div class="stat-box">
+          <div class="stat-number" id="totalVoters">0</div>
+          <div class="stat-label">Total Approved Voters</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="emailsSent">0</div>
+          <div class="stat-label">Emails Sent</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="emailsPending">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="emailsFailed">0</div>
+          <div class="stat-label">Failed</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="voting-control-section" id="emailPreviewSection" style="display:none;">
+      <div class="section-header">
+        <h2>Email Preview</h2>
+      </div>
+      
+      <div class="email-preview">
+        <h4><i class="fas fa-envelope-open-text"></i> Email Template Preview</h4>
+        <div class="email-preview-content">
+          <p><strong>Subject:</strong> SASCE Voting Ballot - [Position Name]</p>
+          <hr style="margin:15px 0; border:none; border-top:1px solid #e5e7eb;">
+          <p>Dear [Voter Name],</p>
+          <p>You have been approved to vote for the <strong>[Position Name]</strong> position in the 2025 SASCE Board Election.</p>
+          <p>Please click the button below to access your unique voting ballot:</p>
+          <p style="margin:20px 0;"><strong>[Unique Voting Link]</strong></p>
+          <p><em>This link is unique to you and will automatically fill in your voter information.</em></p>
+          <p>Thank you for participating in the SASCE election.</p>
+          <p>Best regards,<br>SASCE Election Committee</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="voting-control-section" id="sendSection" style="display:none;">
+      <div class="section-header">
+        <h2>Send Emails</h2>
+      </div>
+      
+      <div class="form-actions">
+        <button id="sendEmailsBtn" class="btn btn-primary">
+          <i class="fas fa-paper-plane"></i> Send Voting Links to All Approved Voters
+        </button>
+        <button id="testEmailBtn" class="btn btn-secondary">
+          <i class="fas fa-envelope-open"></i> Send Test Email
+        </button>
+      </div>
+    </section>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+      <div class="loading-content">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p id="loadingText">Processing...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="nav.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+      authDomain: "facilio-app.firebaseapp.com",
+      projectId: "facilio-app",
+      storageBucket: "facilio-app.firebasestorage.app",
+      messagingSenderId: "515454562817",
+      appId: "1:515454562817:web:1f89da18665af2b67e0600",
+      measurementId: "G-981TTX1T68"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    // Initialize EmailJS
+    emailjs.init("ySMuhBiOuKBR2t0Gl");
+
+    const $ = (id) => document.getElementById(id);
+    const loadingOverlay = $("loadingOverlay");
+    const loadingText = $("loadingText");
+
+    let selectedPosition = null;
+    let approvedVoters = [];
+    let sentEmails = new Set();
+
+    // Position names mapping
+    const positionNames = {
+      'president': 'President',
+      'deputy-president': 'Deputy President',
+      'general-secretary': 'General Secretary',
+      'deputy-general-secretary': 'Deputy General Secretary',
+      'treasurer': 'Treasurer',
+      'deputy-treasurer': 'Deputy Treasurer'
+    };
+
+    // Event listeners for position selection
+    document.querySelectorAll('.position-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.position-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedPosition = option.dataset.position;
+        
+        // Show selected position
+        $("selectedPosition").style.display = 'block';
+        $("selectedPositionText").innerHTML = `<strong>Selected:</strong> ${positionNames[selectedPosition]}`;
+        
+        // Load voters for this position
+        loadVoters();
+      });
+    });
+
+    async function loadVoters() {
+      loadingOverlay.style.display = 'flex';
+      loadingText.textContent = 'Loading approved voters...';
+      
+      try {
+        const qRef = query(collection(db, 'sasce_voters'), where('status', '==', 'Approved'), orderBy('timestamp', 'desc'));
+        const snap = await getDocs(qRef);
+        
+        approvedVoters = [];
+        snap.forEach(doc => {
+          const data = doc.data();
+          // Get all unique voters from the voters array
+          if (data.voters && Array.isArray(data.voters)) {
+            data.voters.forEach(voter => {
+              approvedVoters.push({
+                name: voter.name,
+                email: voter.email,
+                organization: data.organization,
+                membershipNumber: data.membershipNumber,
+                membershipType: data.membershipType
+              });
+            });
+          }
+        });
+        
+        updateStats();
+        $("statsSection").style.display = 'block';
+        $("emailPreviewSection").style.display = 'block';
+        $("sendSection").style.display = 'block';
+        
+      } catch (e) {
+        console.error('Error loading voters:', e);
+        alert('Failed to load approved voters.');
+      } finally {
+        loadingOverlay.style.display = 'none';
+      }
+    }
+
+    function updateStats() {
+      $("totalVoters").textContent = approvedVoters.length;
+      $("emailsSent").textContent = sentEmails.size;
+      $("emailsPending").textContent = approvedVoters.length - sentEmails.size;
+      $("emailsFailed").textContent = '0';
+    }
+
+    function generateUniqueToken(voter) {
+      // Generate a unique token for the voter
+      const data = `${voter.email}${selectedPosition}${voter.organization}`;
+      return btoa(data).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+    }
+
+    async function sendTestEmail() {
+      if (!selectedPosition || approvedVoters.length === 0) {
+        alert('Please select a position and ensure there are approved voters.');
+        return;
+      }
+      
+      // Use the first voter for testing
+      const testVoter = approvedVoters[0];
+      const uniqueToken = generateUniqueToken(testVoter);
+      const votingLink = `https://sasce-nomination-form.vercel.app/ballot.html?token=${uniqueToken}&position=${selectedPosition}`;
+      
+      await sendEmailToVoter(testVoter, uniqueToken, votingLink, true);
+    }
+
+    async function sendEmailsToAll() {
+      if (!selectedPosition || approvedVoters.length === 0) {
+        alert('Please select a position and ensure there are approved voters.');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to send voting links to ${approvedVoters.length} approved voters?`)) {
+        return;
+      }
+      
+      loadingOverlay.style.display = 'flex';
+      loadingText.textContent = 'Sending emails...';
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (let i = 0; i < approvedVoters.length; i++) {
+        const voter = approvedVoters[i];
+        loadingText.textContent = `Sending email ${i + 1} of ${approvedVoters.length}...`;
+        
+        try {
+          const uniqueToken = generateUniqueToken(voter);
+          const votingLink = `https://sasce-nomination-form.vercel.app/ballot.html?token=${uniqueToken}&position=${selectedPosition}`;
+          
+          await sendEmailToVoter(voter, uniqueToken, votingLink, false);
+          sentEmails.add(voter.email);
+          successCount++;
+          updateStats();
+        } catch (error) {
+          console.error('Failed to send email to', voter.email, error);
+          failCount++;
+        }
+      }
+      
+      loadingOverlay.style.display = 'none';
+      alert(`Email sending complete!\nSuccessful: ${successCount}\nFailed: ${failCount}`);
+    }
+
+    async function sendEmailToVoter(voter, uniqueToken, votingLink, isTest) {
+      const emailData = {
+        service_id: 'service_o1ayaah',
+        template_id: 'template_l9m00ai',
+        user_id: 'ySMuhBiOuKBR2t0Gl',
+        template_params: {
+          to_email: voter.email,
+          voter_name: voter.name,
+          position_name: positionNames[selectedPosition],
+          voting_link: votingLink,
+          organization: voter.organization,
+          membership_number: voter.membershipNumber
+        }
+      };
+      
+      return new Promise((resolve, reject) => {
+        emailjs.send(
+          emailData.service_id,
+          emailData.template_id,
+          emailData.template_params,
+          emailData.user_id
+        ).then(() => {
+          console.log(`Email sent successfully to ${voter.email}`);
+          resolve();
+        }).catch(error => {
+          console.error('EmailJS error:', error);
+          reject(error);
+        });
+      });
+    }
+
+    // Event listeners for buttons
+    $("sendEmailsBtn").addEventListener('click', sendEmailsToAll);
+    $("testEmailBtn").addEventListener('click', sendTestEmail);
+  </script>
+</body>
+</html>
+

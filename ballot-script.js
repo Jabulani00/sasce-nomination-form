@@ -12,8 +12,103 @@ class BallotSystem {
             'treasurer',
             'deputy-treasurer'
         ];
+        this.tokenData = null;
+        this.restrictedPosition = null;
         this.initializeEventListeners();
+        this.checkUrlToken();
         this.loadCandidates();
+    }
+
+    checkUrlToken() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const position = urlParams.get('position');
+        
+        // CRITICAL: Block all access without a valid token
+        if (!token || !position) {
+            this.showAccessDenied();
+            return;
+        }
+        
+        // Decode token to get voter info
+        try {
+            const decoded = atob(token);
+            // Extract voter info from the token
+            // Note: In a real implementation, you'd validate this against a database
+            // For now, we'll store the token and position
+            this.tokenData = { token, position };
+            this.restrictedPosition = position;
+            
+            // Load voter info from token - you may need to fetch from Firestore
+            this.loadVoterInfoFromToken(token);
+        } catch (error) {
+            console.error('Invalid token:', error);
+            this.showAccessDenied();
+        }
+    }
+
+    showAccessDenied() {
+        // Hide everything and show access denied message
+        const allElements = document.querySelectorAll('.ballot-container > *');
+        allElements.forEach(el => {
+            if (el.id !== 'accessDeniedOverlay' && el.id !== 'loadingOverlay') {
+                el.style.display = 'none';
+            }
+        });
+        document.getElementById('accessDeniedOverlay').style.display = 'flex';
+    }
+
+    async loadVoterInfoFromToken(token) {
+        // In a production environment, you would validate this token against your database
+        // For now, we'll decode basic info from the token
+        try {
+            const { getFirestore, collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const db = getFirestore();
+            
+            // We need to find the voter that matches this token
+            // Since we encoded it based on email, position, and organization, we can search
+            const votersRef = collection(db, 'sasce_voters');
+            const votersQuery = query(votersRef, where('status', '==', 'Approved'));
+            const querySnapshot = await getDocs(votersQuery);
+            
+            let voterFound = false;
+            querySnapshot.forEach(doc => {
+                const data = doc.data();
+                if (data.voters && Array.isArray(data.voters)) {
+                    data.voters.forEach(voter => {
+                        // Recreate token to match
+                        const testToken = btoa(`${voter.email}${this.restrictedPosition}${data.organization}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+                        if (testToken === token) {
+                            voterFound = true;
+                            // Auto-fill voter information
+                            document.getElementById('voterName').value = voter.name;
+                            document.getElementById('voterEmail').value = voter.email;
+                            document.getElementById('voterMembership').value = data.organization || data.membershipNumber;
+                            
+                            // Make fields readonly since they're pre-filled
+                            document.getElementById('voterName').readOnly = true;
+                            document.getElementById('voterEmail').readOnly = true;
+                            document.getElementById('voterMembership').readOnly = true;
+                            
+                            // Store voter info
+                            this.voterInfo = {
+                                name: voter.name,
+                                email: voter.email,
+                                membership: data.organization || data.membershipNumber,
+                                token: token
+                            };
+                        }
+                    });
+                }
+            });
+            
+            if (!voterFound) {
+                this.showError('Voter information not found. Please use the link provided in your email.');
+            }
+        } catch (error) {
+            console.error('Error loading voter info:', error);
+            this.showError('Failed to verify voting credentials.');
+        }
     }
 
     initializeEventListeners() {
@@ -101,6 +196,14 @@ class BallotSystem {
     renderCandidates() {
         this.positions.forEach(position => {
             const container = document.getElementById(`${position}-candidates`);
+            const section = document.getElementById(`${position}-section`);
+            
+            // If restricted position is set, hide all other positions
+            if (this.restrictedPosition && position !== this.restrictedPosition) {
+                if (section) section.style.display = 'none';
+                return;
+            }
+            
             const positionCandidates = this.candidates.filter(c => c.position === position);
             
             if (positionCandidates.length === 0) {
@@ -141,6 +244,14 @@ class BallotSystem {
                 </div>
             `).join('');
         });
+        
+        // Hide voting summary section if only one position is open
+        if (this.restrictedPosition) {
+            const votingSummarySection = document.querySelector('.voting-summary');
+            if (votingSummarySection) {
+                votingSummarySection.style.display = 'none';
+            }
+        }
     }
 
     selectCandidate(position, candidateId) {
@@ -166,7 +277,10 @@ class BallotSystem {
     updateVoteSummary() {
         const summaryContainer = document.getElementById('voteSummary');
         
-        const summaryHTML = this.positions.map(position => {
+        // If restricted to one position, only show that position
+        const positionsToShow = this.restrictedPosition ? [this.restrictedPosition] : this.positions;
+        
+        const summaryHTML = positionsToShow.map(position => {
             const selectedCandidate = this.votes[position];
             const candidate = selectedCandidate ? this.candidates.find(c => c.id === selectedCandidate) : null;
             
@@ -224,7 +338,7 @@ class BallotSystem {
             
             <div class="vote-confirmation">
                 <h4><i class="fas fa-vote-yea"></i> Your Votes</h4>
-                ${this.positions.map(position => {
+                ${(this.restrictedPosition ? [this.restrictedPosition] : this.positions).map(position => {
                     const selectedCandidate = this.votes[position];
                     const candidate = selectedCandidate ? this.candidates.find(c => c.id === selectedCandidate) : null;
                     

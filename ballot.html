@@ -160,10 +160,20 @@
         </div>
 
         <!-- Loading Overlay -->
-        <div id="loadingOverlay" class="loading-overlay">
+        <div id="loadingOverlay" class="loading-overlay" style="display:none;">
             <div class="loading-content">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Processing your vote...</p>
+            </div>
+        </div>
+
+        <!-- Access Denied Overlay -->
+        <div id="accessDeniedOverlay" class="loading-overlay" style="display:none;">
+            <div class="loading-content">
+                <i class="fas fa-lock" style="color: #dc3545; font-size: 3rem; margin-bottom: 20px;"></i>
+                <h2 style="color: #dc3545; margin-bottom: 15px;">Access Denied</h2>
+                <p style="color: #333; font-size: 1.1rem;">This voting ballot requires a valid invitation link.</p>
+                <p style="color: #666; margin-top: 10px;">Please check your email for the voting link or contact the election administrator.</p>
             </div>
         </div>
     </div>
