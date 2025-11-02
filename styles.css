@@ -11,6 +11,47 @@ body {
     color: #333333;
     background: #FFFFFF;
     min-height: 100vh;
+    position: relative;
+}
+
+/* Admin Button Styles */
+.admin-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #3A6B9C 0%, #8A74A1 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(58, 107, 156, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.admin-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(58, 107, 156, 0.4);
+    background: linear-gradient(135deg, #2c5a8a 0%, #7a6490 100%);
+}
+
+.admin-button i {
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .admin-button {
+        top: 10px;
+        right: 10px;
+        padding: 10px 15px;
+        font-size: 0.85rem;
+    }
 }
 
 .container {

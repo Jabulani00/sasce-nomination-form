@@ -177,6 +177,42 @@
 
     <!-- Excel Export Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Session Validation -->
+    <script>
+        // Check if user is logged in
+        function checkSession() {
+            const sessionData = localStorage.getItem('sasce_admin_session');
+            if (!sessionData) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            
+            try {
+                const session = JSON.parse(sessionData);
+                // Check if session is valid (less than 8 hours old)
+                const sessionAge = Date.now() - session.timestamp;
+                const maxAge = 8 * 60 * 60 * 1000; // 8 hours
+                
+                if (!session.loggedIn || sessionAge > maxAge) {
+                    localStorage.removeItem('sasce_admin_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                return true;
+            } catch {
+                localStorage.removeItem('sasce_admin_session');
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+        
+        // Check session on page load
+        if (!checkSession()) {
+            // Redirect will happen, prevent page from loading
+        }
+    </script>
+    
     <script src="nav.js"></script>
     <script src="admin-script.js"></script>
 </body>

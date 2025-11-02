@@ -222,7 +222,7 @@
   <script src="nav.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
@@ -279,7 +279,7 @@
       loadingText.textContent = 'Loading approved voters...';
       
       try {
-        const qRef = query(collection(db, 'sasce_voters'), where('status', '==', 'Approved'), orderBy('timestamp', 'desc'));
+        const qRef = query(collection(db, 'sasce_voters'), where('status', '==', 'Approved'));
         const snap = await getDocs(qRef);
         
         approvedVoters = [];
