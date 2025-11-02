@@ -247,6 +247,16 @@
     let selectedPosition = null;
     let approvedVoters = [];
     let sentEmails = new Set();
+    let failedEmails = new Set();
+    let emailStatus = new Map(); // Track status: 'pending', 'sent', 'failed'
+
+    // EmailJS configuration
+    const EMAILJS_CONFIG = {
+      BATCH_SIZE: 10, // Number of emails to send concurrently
+      BATCH_DELAY: 1000, // Delay between batches in milliseconds (1 second)
+      MAX_RETRIES: 2, // Maximum retry attempts for failed emails
+      RETRY_DELAY: 2000 // Delay before retrying failed emails (2 seconds)
+    };
 
     // Position names mapping
     const positionNames = {
@@ -283,18 +293,27 @@
         const snap = await getDocs(qRef);
         
         approvedVoters = [];
+        sentEmails.clear();
+        failedEmails.clear();
+        emailStatus.clear();
+        
         snap.forEach(doc => {
           const data = doc.data();
           // Get all unique voters from the voters array
           if (data.voters && Array.isArray(data.voters)) {
             data.voters.forEach(voter => {
-              approvedVoters.push({
-                name: voter.name,
-                email: voter.email,
-                organization: data.organization,
-                membershipNumber: data.membershipNumber,
-                membershipType: data.membershipType
-              });
+              const email = voter.email;
+              // Prevent duplicate voters based on email
+              if (!sentEmails.has(email) && !emailStatus.has(email)) {
+                approvedVoters.push({
+                  name: voter.name,
+                  email: email,
+                  organization: data.organization,
+                  membershipNumber: data.membershipNumber,
+                  membershipType: data.membershipType
+                });
+                emailStatus.set(email, 'pending');
+              }
             });
           }
         });
@@ -313,10 +332,15 @@
     }
 
     function updateStats() {
-      $("totalVoters").textContent = approvedVoters.length;
-      $("emailsSent").textContent = sentEmails.size;
-      $("emailsPending").textContent = approvedVoters.length - sentEmails.size;
-      $("emailsFailed").textContent = '0';
+      const total = approvedVoters.length;
+      const sent = Array.from(emailStatus.values()).filter(s => s === 'sent').length;
+      const failed = Array.from(emailStatus.values()).filter(s => s === 'failed').length;
+      const pending = total - sent - failed;
+      
+      $("totalVoters").textContent = total;
+      $("emailsSent").textContent = sent;
+      $("emailsPending").textContent = pending;
+      $("emailsFailed").textContent = failed;
     }
 
     function generateUniqueToken(voter) {
@@ -331,12 +355,37 @@
         return;
       }
       
-      // Use the first voter for testing
-      const testVoter = approvedVoters[0];
-      const uniqueToken = generateUniqueToken(testVoter);
-      const votingLink = `https://sasce-nomination-form.vercel.app/ballot.html?token=${uniqueToken}&position=${selectedPosition}`;
+      loadingOverlay.style.display = 'flex';
+      loadingText.textContent = 'Sending test email...';
       
-      await sendEmailToVoter(testVoter, uniqueToken, votingLink, true);
+      try {
+        // Use the first voter for testing
+        const testVoter = approvedVoters[0];
+        const uniqueToken = generateUniqueToken(testVoter);
+        const votingLink = `https://sasce-nomination-form.vercel.app/ballot.html?token=${uniqueToken}&position=${selectedPosition}`;
+        
+        await sendEmailToVoter(testVoter, uniqueToken, votingLink, true);
+        loadingOverlay.style.display = 'none';
+        alert(`Test email sent successfully to ${testVoter.email}!`);
+      } catch (error) {
+        loadingOverlay.style.display = 'none';
+        console.error('Failed to send test email:', error);
+        alert(`Failed to send test email: ${error.message || 'Unknown error'}`);
+      }
+    }
+
+    // Helper function to create batches from array
+    function createBatches(array, batchSize) {
+      const batches = [];
+      for (let i = 0; i < array.length; i += batchSize) {
+        batches.push(array.slice(i, i + batchSize));
+      }
+      return batches;
+    }
+
+    // Helper function to delay execution
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     async function sendEmailsToAll() {
@@ -350,34 +399,119 @@
       }
       
       loadingOverlay.style.display = 'flex';
-      loadingText.textContent = 'Sending emails...';
+      loadingText.textContent = 'Preparing to send emails...';
       
-      let successCount = 0;
-      let failCount = 0;
+      // Filter out already sent emails to prevent duplicates
+      const votersToSend = approvedVoters.filter(voter => emailStatus.get(voter.email) !== 'sent');
       
-      for (let i = 0; i < approvedVoters.length; i++) {
-        const voter = approvedVoters[i];
-        loadingText.textContent = `Sending email ${i + 1} of ${approvedVoters.length}...`;
+      if (votersToSend.length === 0) {
+        loadingOverlay.style.display = 'none';
+        alert('All emails have already been sent!');
+        return;
+      }
+      
+      // Reset status for voters being sent
+      votersToSend.forEach(voter => {
+        if (emailStatus.get(voter.email) !== 'sent') {
+          emailStatus.set(voter.email, 'pending');
+        }
+      });
+      updateStats();
+      
+      // Create batches for processing
+      const batches = createBatches(votersToSend, EMAILJS_CONFIG.BATCH_SIZE);
+      let totalSent = 0;
+      let totalFailed = 0;
+      
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        loadingText.textContent = `Processing batch ${batchIndex + 1} of ${batches.length} (${totalSent} sent, ${totalFailed} failed)...`;
         
-        try {
+        // Send batch concurrently
+        const batchPromises = batch.map(async (voter) => {
+          // Skip if already sent
+          if (emailStatus.get(voter.email) === 'sent') {
+            return { success: true, email: voter.email };
+          }
+          
           const uniqueToken = generateUniqueToken(voter);
           const votingLink = `https://sasce-nomination-form.vercel.app/ballot.html?token=${uniqueToken}&position=${selectedPosition}`;
           
-          await sendEmailToVoter(voter, uniqueToken, votingLink, false);
-          sentEmails.add(voter.email);
-          successCount++;
-          updateStats();
-        } catch (error) {
-          console.error('Failed to send email to', voter.email, error);
-          failCount++;
+          // Retry logic
+          let attempts = 0;
+          while (attempts <= EMAILJS_CONFIG.MAX_RETRIES) {
+            try {
+              await sendEmailToVoter(voter, uniqueToken, votingLink, false);
+              emailStatus.set(voter.email, 'sent');
+              sentEmails.add(voter.email);
+              failedEmails.delete(voter.email);
+              return { success: true, email: voter.email };
+            } catch (error) {
+              attempts++;
+              if (attempts > EMAILJS_CONFIG.MAX_RETRIES) {
+                emailStatus.set(voter.email, 'failed');
+                failedEmails.add(voter.email);
+                console.error(`Failed to send email to ${voter.email} after ${attempts} attempts:`, error);
+                return { success: false, email: voter.email, error };
+              } else {
+                // Wait before retry
+                await delay(EMAILJS_CONFIG.RETRY_DELAY);
+              }
+            }
+          }
+        });
+        
+        // Wait for all emails in batch to complete
+        const results = await Promise.allSettled(batchPromises);
+        
+        // Count successes and failures
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            if (result.value.success) {
+              totalSent++;
+            } else {
+              totalFailed++;
+            }
+          } else {
+            totalFailed++;
+            const voter = batch[index];
+            emailStatus.set(voter.email, 'failed');
+            failedEmails.add(voter.email);
+          }
+        });
+        
+        // Update stats after each batch
+        updateStats();
+        
+        // Add delay between batches to respect rate limits (except for last batch)
+        if (batchIndex < batches.length - 1) {
+          await delay(EMAILJS_CONFIG.BATCH_DELAY);
         }
       }
       
       loadingOverlay.style.display = 'none';
-      alert(`Email sending complete!\nSuccessful: ${successCount}\nFailed: ${failCount}`);
+      updateStats();
+      
+      const finalStats = {
+        sent: Array.from(emailStatus.values()).filter(s => s === 'sent').length,
+        failed: Array.from(emailStatus.values()).filter(s => s === 'failed').length,
+        pending: Array.from(emailStatus.values()).filter(s => s === 'pending').length
+      };
+      
+      alert(`Email sending complete!\n\nSuccessful: ${finalStats.sent}\nFailed: ${finalStats.failed}\nPending: ${finalStats.pending}`);
+      
+      // Log failed emails for debugging
+      if (finalStats.failed > 0) {
+        console.warn('Failed email addresses:', Array.from(failedEmails));
+      }
     }
 
     async function sendEmailToVoter(voter, uniqueToken, votingLink, isTest) {
+      // Prevent duplicate sends
+      if (emailStatus.get(voter.email) === 'sent' && !isTest) {
+        throw new Error('Email already sent to this recipient');
+      }
+      
       const emailData = {
         service_id: 'service_o1ayaah',
         template_id: 'template_l9m00ai',
@@ -398,11 +532,20 @@
           emailData.template_id,
           emailData.template_params,
           emailData.user_id
-        ).then(() => {
-          console.log(`Email sent successfully to ${voter.email}`);
-          resolve();
+        ).then((response) => {
+          if (response.status === 200) {
+            console.log(`Email sent successfully to ${voter.email}`);
+            resolve();
+          } else {
+            reject(new Error(`EmailJS returned status ${response.status}`));
+          }
         }).catch(error => {
-          console.error('EmailJS error:', error);
+          // Enhanced error logging
+          console.error(`EmailJS error for ${voter.email}:`, {
+            text: error.text,
+            status: error.status,
+            message: error.message
+          });
           reject(error);
         });
       });
