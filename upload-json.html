@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE Nomination – JSON Upload</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <a href="index.html" class="admin-button" title="Back to Form">
+        <i class="fas fa-arrow-left"></i> Back to Form
+    </a>
+
+    <div class="container">
+        <header class="form-header">
+            <div class="logo-container">
+                <img src="logo.png" alt="SASCE Logo" class="sasce-logo">
+            </div>
+            <h1>Upload Nominations via JSON</h1>
+            <p class="subtitle">Download the template, fill it in, then upload to add nominations to the database.</p>
+        </header>
+
+        <section class="form-section active">
+            <div class="section-header">
+                <h2>JSON Template</h2>
+                <h3>Download and prepare your data</h3>
+            </div>
+            <div class="section-content">
+                <div class="summary-actions" style="gap: 12px;">
+                    <button id="downloadTemplateBtn" type="button" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Download JSON Template
+                    </button>
+                    <button id="downloadSampleBtn" type="button" class="btn btn-secondary">
+                        <i class="fas fa-file"></i> Download Sample (with 1 entry)
+                    </button>
+                </div>
+                <p style="margin-top: 10px; color:#2c3e50;">You can upload either a single nomination object or an array of nomination objects.</p>
+            </div>
+        </section>
+
+        <section class="form-section active">
+            <div class="section-header">
+                <h2>Upload</h2>
+                <h3>Select your JSON file</h3>
+            </div>
+            <div class="section-content">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label for="jsonFile">JSON File</label>
+                        <input type="file" id="jsonFile" accept="application/json">
+                        <div id="fileInfo" class="file-preview"></div>
+                    </div>
+                </div>
+
+                <div id="validationBox" class="success-message" style="display:none;"></div>
+
+                <div class="summary-actions" style="gap: 12px;">
+                    <button id="validateBtn" type="button" class="btn btn-info" disabled>
+                        <i class="fas fa-spell-check"></i> Validate
+                    </button>
+                    <button id="submitBtn" type="button" class="btn btn-success" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> Submit to Database
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="form-section active" id="resultsSection" style="display:none;">
+            <div class="section-header">
+                <h2>Results</h2>
+                <h3>Submission outcome</h3>
+            </div>
+            <div class="section-content">
+                <div id="resultsBox" class="success-message show"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK (initialized like on index.html) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+        initializeApp(firebaseConfig);
+    </script>
+
+    <script src="upload-json.js"></script>
+</body>
+</html>
+
