@@ -4,6 +4,11 @@ class BallotSystem {
         this.candidates = [];
         this.votes = {};
         this.voterInfo = {};
+        // Configurable placeholder image for candidates without a profile photo
+        // You can override via window.CANDIDATE_PLACEHOLDER_URL before DOMContentLoaded
+        this.placeholderImageUrl = (window && window.CANDIDATE_PLACEHOLDER_URL) ||
+            // Inline SVG data URI (accessible, no external request). Replace with your Flaticon URL if desired.
+            'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="none" stroke="%233A6B9C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>';
         this.positions = [
             'president',
             'deputy-president', 
@@ -225,7 +230,7 @@ class BallotSystem {
                         <div class="candidate-image">
                             ${candidate.profilePictureBase64 ? 
                                 `<img src="${candidate.profilePictureBase64}" alt="${candidate.candidateName}" class="profile-img">` : 
-                                `<div class="no-image"><i class="fas fa-user"></i></div>`
+                                `<img src="${this.placeholderImageUrl}" alt="${candidate.candidateName} placeholder" class="profile-img" loading="lazy">`
                             }
                         </div>
                         <div class="candidate-info">
@@ -360,7 +365,7 @@ class BallotSystem {
                                 <div class="candidate-image">
                                     ${candidate.profilePictureBase64 ? 
                                         `<img src="${candidate.profilePictureBase64}" alt="${candidate.candidateName}" class="profile-img">` : 
-                                        `<div class="no-image"><i class="fas fa-user"></i></div>`
+                                        `<img src="${this.placeholderImageUrl}" alt="${candidate.candidateName} placeholder" class="profile-img" loading="lazy">`
                                     }
                                 </div>
                                 <div class="candidate-info">
