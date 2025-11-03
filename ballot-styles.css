@@ -492,13 +492,22 @@ body {
 
 .modal-content {
     background-color: white;
-    margin: 5% auto;
     padding: 0;
     border-radius: 15px;
     width: 90%;
     max-width: 600px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     animation: modalSlideIn 0.3s ease;
+    /* Pin to top and make internal content scrollable */
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100vh;
+    max-height: 100dvh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
@@ -533,8 +542,10 @@ body {
 
 .modal-body {
     padding: 30px;
-    max-height: 70vh;
     overflow-y: auto;
+    /* Allow flexbox to size this area and scroll when needed */
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .modal-footer {
@@ -625,8 +636,13 @@ body {
     }
     
     .modal-content {
-        width: 95%;
-        margin: 10% auto;
+        width: 100%;
+        max-width: none;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 0 0 12px 12px;
+        height: 100vh;
+        max-height: 100dvh;
     }
 }
 
