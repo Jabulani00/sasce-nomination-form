@@ -224,9 +224,29 @@
       </p>
     </div>
 
+    <div class="detail-section" style="background:#fff8e6; border-color:#f59e0b;">
+      <h3><i class="fas fa-exclamation-circle"></i> Before you accept</h3>
+      <p>Please read the SASCE Constitution document below carefully before making your decision. This is the official Constitution. Specifically review:</p>
+      <ul>
+        <li>Pages 3–4: Objectives</li>
+        <li>Pages 14–17: Roles and Responsibilities</li>
+      </ul>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <a id="openDocLink" href="assets/DPApproved%202024%20Nomination%20Form%20for%20the%20Election%20of%20SASCE%20Office%20bearers%20-%20for%20Distr%20EL.docx" target="_blank" rel="noopener" class="btn btn-primary" style="width:auto; text-decoration:none; display:inline-block;">READ THE CONSTITUTION</a>
+      </div>
+      <p style="font-weight:600; margin:0;">This is what that nomination will mean if you win.</p>
+      <div style="margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="readAck">
+          <span>I have reviewed pages 3–4 (Objectives) and 14–17 (Roles & Responsibilities)</span>
+        </label>
+        <span id="ackStatus" style="color:#ef4444; font-weight:600;">Acceptance will be enabled after you open the document and tick the box.</span>
+      </div>
+    </div>
+
     <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
       <button id="editBtn" class="btn btn-secondary" style="width:auto;">Edit Information</button>
-      <button id="acceptBtn" class="btn btn-success" style="width:auto;">Accept</button>
+      <button id="acceptBtn" class="btn btn-success" style="width:auto;" disabled>Accept</button>
       <button id="rejectBtn" class="btn btn-danger" style="width:auto;">Reject</button>
     </div>
   </div>
@@ -242,6 +262,28 @@
       <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
         <button onclick="window.close()" class="btn btn-secondary" style="width:auto;">Close Window</button>
         <a href="/" class="btn btn-primary" style="width:auto; text-decoration:none; display:inline-block;">Back to Form</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pre-Accept Confirmation Modal -->
+  <div id="preAcceptModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-check-circle"></i> Confirm Acceptance</h3>
+        <span class="close" id="preAcceptClose" style="cursor:pointer;">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>By proceeding, you confirm that:</p>
+        <ul>
+          <li>You have reviewed the document’s Objectives (pages 3–4).</li>
+          <li>You understand the Roles and Responsibilities (pages 14–17).</li>
+        </ul>
+        <p>Do you want to submit your acceptance?</p>
+      </div>
+      <div class="modal-footer">
+        <button id="preAcceptProceed" class="btn btn-success">Yes, Submit Acceptance</button>
+        <button id="preAcceptCancel" class="btn btn-secondary">Cancel</button>
       </div>
     </div>
   </div>
@@ -271,8 +313,16 @@
     const editBtn = document.getElementById('editBtn');
     const acceptBtn = document.getElementById('acceptBtn');
     const rejectBtn = document.getElementById('rejectBtn');
+    const openDocLink = document.getElementById('openDocLink');
+    const readAck = document.getElementById('readAck');
+    const ackStatus = document.getElementById('ackStatus');
+    const preAcceptModal = document.getElementById('preAcceptModal');
+    const preAcceptClose = document.getElementById('preAcceptClose');
+    const preAcceptCancel = document.getElementById('preAcceptCancel');
+    const preAcceptProceed = document.getElementById('preAcceptProceed');
 
     let nominationData = null;
+    let hasOpenedDocument = false;
 
     function formatPositionName(position) {
       const positionMap = {
@@ -769,6 +819,41 @@
       document.getElementById('confirmationScreen').style.display = 'block';
     }
 
+    function updateAcceptEnabled() {
+      const canAccept = hasOpenedDocument && !!(readAck && readAck.checked);
+      if (acceptBtn) acceptBtn.disabled = !canAccept;
+      if (ackStatus) ackStatus.style.color = canAccept ? '#10b981' : '#ef4444';
+      if (ackStatus) ackStatus.textContent = canAccept
+        ? 'You may now submit your acceptance.'
+        : 'Acceptance will be enabled after you open the document and tick the box.';
+    }
+
+    if (openDocLink) {
+      openDocLink.addEventListener('click', () => {
+        hasOpenedDocument = true; // mark that the user opened the doc link
+        updateAcceptEnabled();
+      });
+    }
+
+    if (readAck) {
+      readAck.addEventListener('change', updateAcceptEnabled);
+    }
+
+    function openPreAcceptModal() {
+      if (preAcceptModal) preAcceptModal.style.display = 'block';
+    }
+
+    function closePreAcceptModal() {
+      if (preAcceptModal) preAcceptModal.style.display = 'none';
+    }
+
+    if (preAcceptClose) preAcceptClose.addEventListener('click', closePreAcceptModal);
+    if (preAcceptCancel) preAcceptCancel.addEventListener('click', closePreAcceptModal);
+    if (preAcceptProceed) preAcceptProceed.addEventListener('click', () => {
+      closePreAcceptModal();
+      submitDecision('accept');
+    });
+
     editBtn.addEventListener('click', () => {
       if (!nominationData) return;
       isEditing = !isEditing;
@@ -862,10 +947,15 @@
       }
     }
 
-    acceptBtn.addEventListener('click', () => submitDecision('accept'));
+    acceptBtn.addEventListener('click', () => {
+      // Guard: only proceed if enabled
+      if (acceptBtn.disabled) return;
+      openPreAcceptModal();
+    });
     rejectBtn.addEventListener('click', () => submitDecision('deny'));
 
     loadNomination();
+    updateAcceptEnabled();
   </script>
 </body>
 </html>
