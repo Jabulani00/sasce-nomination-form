@@ -173,6 +173,80 @@
     .btn-close:hover {
       background: #4b5563;
     }
+
+    /* Centered Modal Styles */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none; /* default hidden; toggled via JS */
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal .modal-content {
+      background: #ffffff;
+      width: min(560px, 100%);
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.2);
+      overflow: hidden;
+      animation: modal-pop 0.2s ease-out;
+    }
+
+    .modal .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal .modal-header h3 {
+      margin: 0;
+      color: #1e293b;
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal .close {
+      font-size: 22px;
+      line-height: 1;
+      color: #64748b;
+    }
+
+    .modal .close:hover {
+      color: #111827;
+    }
+
+    .modal .modal-body {
+      padding: 16px 20px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .modal .modal-body ul {
+      margin: 8px 0 0 18px;
+    }
+
+    .modal .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 10px;
+      justify-content: center; /* center the action buttons */
+      flex-wrap: wrap;
+    }
+
+    @keyframes modal-pop {
+      from { transform: scale(0.97); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
   </style>
 </head>
 <body>
