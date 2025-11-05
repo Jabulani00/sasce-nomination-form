@@ -197,7 +197,7 @@ class BallotSystem {
                         id: doc.id,
                         candidateName: `${data.firstName} ${data.surname}`,
                         position: data.positionNominated,
-                        organization: data.membershipNumber,
+                        organization: String(data.organization || data.membershipNumber || ''),
                         jobTitle: data.jobTitle,
                         currentRoles: data.currentRoles,
                         qualifications: data.qualifications,
@@ -286,12 +286,12 @@ class BallotSystem {
     }
 
     getOtherPositionsForCandidate(candidate, currentPosition) {
-        const normalizedName = (candidate.candidateName || '').trim().toLowerCase();
-        const normalizedOrg = (candidate.organization || '').trim().toLowerCase();
+        const normalizedName = String(candidate.candidateName || '').trim().toLowerCase();
+        const normalizedOrg = String(candidate.organization || '').trim().toLowerCase();
         const positions = new Set();
         this.candidates.forEach(c => {
-            const sameName = (c.candidateName || '').trim().toLowerCase() === normalizedName;
-            const sameOrg = (c.organization || '').trim().toLowerCase() === normalizedOrg;
+            const sameName = String(c.candidateName || '').trim().toLowerCase() === normalizedName;
+            const sameOrg = String(c.organization || '').trim().toLowerCase() === normalizedOrg;
             if (sameName && sameOrg && c.position !== currentPosition) {
                 positions.add(c.position);
             }
