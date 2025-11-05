@@ -19,18 +19,19 @@ class BallotSystem {
         ];
         this.tokenData = null;
         this.restrictedPosition = null;
+        this.openPositions = {};
         this.initializeEventListeners();
         this.checkUrlToken();
+        this.listenToVotingOpenSettings();
         this.loadCandidates();
     }
 
     checkUrlToken() {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
-        const position = urlParams.get('position');
         
-        // CRITICAL: Block all access without a valid token
-        if (!token || !position) {
+        // CRITICAL: Block all access without a valid token (position not required)
+        if (!token) {
             this.showAccessDenied();
             return;
         }
@@ -40,15 +41,30 @@ class BallotSystem {
             const decoded = atob(token);
             // Extract voter info from the token
             // Note: In a real implementation, you'd validate this against a database
-            // For now, we'll store the token and position
-            this.tokenData = { token, position };
-            this.restrictedPosition = position;
+            // For now, we'll store the token (no position restriction)
+            this.tokenData = { token };
+            this.restrictedPosition = null;
             
             // Load voter info from token - you may need to fetch from Firestore
             this.loadVoterInfoFromToken(token);
         } catch (error) {
             console.error('Invalid token:', error);
             this.showAccessDenied();
+        }
+    }
+
+    async listenToVotingOpenSettings() {
+        try {
+            const { getFirestore, doc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const db = getFirestore();
+            const settingsRef = doc(db, 'voting_settings', 'positions');
+            onSnapshot(settingsRef, (snapshot) => {
+                const data = snapshot.data() || {};
+                this.openPositions = { ...data };
+                this.renderCandidates();
+            });
+        } catch (e) {
+            console.error('Failed to listen to voting settings', e);
         }
     }
 
@@ -70,8 +86,8 @@ class BallotSystem {
             const { getFirestore, collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
             const db = getFirestore();
             
-            // We need to find the voter that matches this token
-            // Since we encoded it based on email, position, and organization, we can search
+        // We need to find the voter that matches this token
+        // Tokens may have been encoded with (email+position+organization) or (email+organization)
             const votersRef = collection(db, 'sasce_voters');
             const votersQuery = query(votersRef, where('status', '==', 'Approved'));
             const querySnapshot = await getDocs(votersQuery);
@@ -81,9 +97,18 @@ class BallotSystem {
                 const data = doc.data();
                 if (data.voters && Array.isArray(data.voters)) {
                     data.voters.forEach(voter => {
-                        // Recreate token to match
-                        const testToken = btoa(`${voter.email}${this.restrictedPosition}${data.organization}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
-                        if (testToken === token) {
+                        const candidateTokens = [];
+                        // Legacy tokens per-position
+                        this.positions.forEach(pos => {
+                            candidateTokens.push(
+                                btoa(`${voter.email}${pos}${data.organization}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)
+                            );
+                        });
+                        // New token without position
+                        candidateTokens.push(
+                            btoa(`${voter.email}${data.organization}`).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)
+                        );
+                        if (candidateTokens.includes(token)) {
                             voterFound = true;
                             // Auto-fill voter information
                             document.getElementById('voterName').value = voter.name;
@@ -203,11 +228,8 @@ class BallotSystem {
             const container = document.getElementById(`${position}-candidates`);
             const section = document.getElementById(`${position}-section`);
             
-            // If restricted position is set, hide all other positions
-            if (this.restrictedPosition && position !== this.restrictedPosition) {
-                if (section) section.style.display = 'none';
-                return;
-            }
+            // Always show all sections
+            if (section) section.style.display = '';
             
             const positionCandidates = this.candidates.filter(c => c.position === position);
             
@@ -222,9 +244,16 @@ class BallotSystem {
                 return;
             }
             
-            container.innerHTML = positionCandidates.map(candidate => `
-                <div class="candidate-card" onclick="ballotSystem.selectCandidate('${position}', '${candidate.id}')">
-                    <input type="radio" name="${position}" value="${candidate.id}" id="${candidate.id}">
+            const isOpen = !!this.openPositions[position];
+            container.innerHTML = positionCandidates.map(candidate => {
+                const otherPositions = this.getOtherPositionsForCandidate(candidate, position);
+                const alsoContestingHtml = otherPositions.length > 0
+                    ? `<p><strong>Also contesting:</strong> ${otherPositions.map(p => this.formatPositionName(p)).join(', ')}</p>`
+                    : '';
+
+                return `
+                <div class="candidate-card ${isOpen ? '' : 'disabled'}" ${isOpen ? `onclick=\"ballotSystem.selectCandidate('${position}', '${candidate.id}')\"` : ''}>
+                    <input type="radio" name="${position}" value="${candidate.id}" id="${candidate.id}" ${isOpen ? '' : 'disabled'}>
                     <div class="radio-indicator"></div>
                     <div class="candidate-profile">
                         <div class="candidate-image">
@@ -245,18 +274,29 @@ class BallotSystem {
                         <p><strong>Job Title:</strong> ${candidate.jobTitle || 'N/A'}</p>
                         ${candidate.currentRoles ? `<p><strong>Current Roles:</strong> ${candidate.currentRoles.substring(0, 100)}${candidate.currentRoles.length > 100 ? '...' : ''}</p>` : ''}
                         ${candidate.qualifications ? `<p><strong>Qualifications:</strong> ${candidate.qualifications.substring(0, 100)}${candidate.qualifications.length > 100 ? '...' : ''}</p>` : ''}
+                        ${alsoContestingHtml}
+                        ${isOpen ? '' : `<div class=\"position-locked\"><i class=\"fas fa-lock\"></i> Voting for ${this.formatPositionName(position)} is not open yet.</div>`}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         });
         
-        // Hide voting summary section if only one position is open
-        if (this.restrictedPosition) {
-            const votingSummarySection = document.querySelector('.voting-summary');
-            if (votingSummarySection) {
-                votingSummarySection.style.display = 'none';
+        // Always show voting summary
+    }
+
+    getOtherPositionsForCandidate(candidate, currentPosition) {
+        const normalizedName = (candidate.candidateName || '').trim().toLowerCase();
+        const normalizedOrg = (candidate.organization || '').trim().toLowerCase();
+        const positions = new Set();
+        this.candidates.forEach(c => {
+            const sameName = (c.candidateName || '').trim().toLowerCase() === normalizedName;
+            const sameOrg = (c.organization || '').trim().toLowerCase() === normalizedOrg;
+            if (sameName && sameOrg && c.position !== currentPosition) {
+                positions.add(c.position);
             }
-        }
+        });
+        return Array.from(positions);
     }
 
     selectCandidate(position, candidateId) {
@@ -356,6 +396,11 @@ class BallotSystem {
                         `;
                     }
                     
+                    const otherPositions = this.getOtherPositionsForCandidate(candidate, position);
+                    const alsoContestingInline = otherPositions.length > 0
+                        ? `<div class="candidate-roles"><strong>Also contesting:</strong> ${otherPositions.map(p => this.formatPositionName(p)).join(', ')}</div>`
+                        : '';
+
                     return `
                         <div class="confirmation-vote-item">
                             <div class="vote-position">
@@ -373,6 +418,7 @@ class BallotSystem {
                                     <div class="candidate-org">${candidate.organization || 'N/A'}</div>
                                     <div class="candidate-job">${candidate.jobTitle || 'N/A'}</div>
                                     ${candidate.currentRoles ? `<div class="candidate-roles"><strong>Current Roles:</strong> ${candidate.currentRoles.substring(0, 150)}${candidate.currentRoles.length > 150 ? '...' : ''}</div>` : ''}
+                                    ${alsoContestingInline}
                                 </div>
                             </div>
                         </div>

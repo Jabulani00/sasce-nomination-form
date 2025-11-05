@@ -147,6 +147,11 @@
       <div id="selectedPosition" style="display:none; margin-top:20px; padding:15px; background:#e8f4fd; border-radius:8px;">
         <i class="fas fa-info-circle"></i>
         <span id="selectedPositionText"></span>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="openVotingBtn" class="btn btn-success"><i class="fas fa-lock-open"></i> Open Voting</button>
+          <button id="closeVotingBtn" class="btn btn-warning"><i class="fas fa-lock"></i> Close Voting</button>
+          <span id="positionOpenStatus" style="color:#2c3e50;"></span>
+        </div>
       </div>
     </section>
 
@@ -222,7 +227,7 @@
   <script src="nav.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
@@ -278,11 +283,66 @@
         // Show selected position
         $("selectedPosition").style.display = 'block';
         $("selectedPositionText").innerHTML = `<strong>Selected:</strong> ${positionNames[selectedPosition]}`;
+        updateOpenStatusText();
         
         // Load voters for this position
         loadVoters();
       });
     });
+
+    async function ensureSettingsDoc() {
+      const ref = doc(db, 'voting_settings', 'positions');
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        await setDoc(ref, {}, { merge: true });
+      }
+      return ref;
+    }
+
+    async function setPositionOpen(isOpen) {
+      if (!selectedPosition) {
+        alert('Please select a position first.');
+        return;
+      }
+      loadingOverlay.style.display = 'flex';
+      loadingText.textContent = isOpen ? 'Opening voting...' : 'Closing voting...';
+      try {
+        const ref = await ensureSettingsDoc();
+        await updateDoc(ref, { [selectedPosition]: !!isOpen });
+        updateOpenStatusText(isOpen);
+        alert(`${positionNames[selectedPosition]} voting ${isOpen ? 'opened' : 'closed'} successfully.`);
+      } catch (e) {
+        console.error('Failed to update voting status', e);
+        alert('Failed to update voting status.');
+      } finally {
+        loadingOverlay.style.display = 'none';
+      }
+    }
+
+    async function getPositionOpen() {
+      if (!selectedPosition) return null;
+      try {
+        const ref = doc(db, 'voting_settings', 'positions');
+        const snap = await getDoc(ref);
+        const data = snap.exists() ? snap.data() : {};
+        return !!data[selectedPosition];
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function updateOpenStatusText(forceValue) {
+      const el = $("positionOpenStatus");
+      if (!el || !selectedPosition) return;
+      const isOpen = typeof forceValue === 'boolean' ? forceValue : await getPositionOpen();
+      if (isOpen === null) {
+        el.textContent = '';
+      } else if (isOpen) {
+        el.innerHTML = `<i class="fas fa-unlock" style="color:#16a34a"></i> Voting is OPEN`;
+      } else {
+        el.innerHTML = `<i class="fas fa-lock" style="color:#b45309"></i> Voting is CLOSED`;
+      }
+    }
 
     async function loadVoters() {
       loadingOverlay.style.display = 'flex';
@@ -554,6 +614,8 @@
     // Event listeners for buttons
     $("sendEmailsBtn").addEventListener('click', sendEmailsToAll);
     $("testEmailBtn").addEventListener('click', sendTestEmail);
+    $("openVotingBtn").addEventListener('click', () => setPositionOpen(true));
+    $("closeVotingBtn").addEventListener('click', () => setPositionOpen(false));
   </script>
 </body>
 </html>
