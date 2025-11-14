@@ -851,8 +851,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Countdown Timer Function
 function initCountdownTimer() {
-    // Set the target date to November 14, 2025 at 12:00 (noon)
-    const targetDate = new Date('2025-11-14T12:00:00').getTime();
+    // Set the target date to January 18, 2026 at 12:00 (noon)
+    const targetDate = new Date('2026-01-18T12:00:00').getTime();
     
     function updateCountdown() {
         const now = new Date().getTime();
