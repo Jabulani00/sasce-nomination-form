@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SASCE 2026-2027 Election - Approved Nominations</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8f4fd 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #3A6B9C;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            max-height: 80px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(58, 107, 156, 0.2));
+        }
+
+        .header h1 {
+            color: #3A6B9C;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #8A74A1;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #3A6B9C;
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #c33;
+            margin: 20px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        .category-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 2px solid #3A6B9C;
+        }
+
+        .category-header {
+            background: linear-gradient(135deg, #3A6B9C 0%, #8A74A1 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .category-header i {
+            font-size: 1.5rem;
+        }
+
+        .category-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .category-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .nominations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .nomination-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 30px 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .nomination-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(58, 107, 156, 0.15);
+            border-color: #3A6B9C;
+        }
+
+        .candidate-photo {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            display: block;
+            border: 3px solid #3A6B9C;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .candidate-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #3A6B9C;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .candidate-role {
+            font-size: 0.95rem;
+            color: #666;
+            text-align: center;
+            font-weight: 400;
+        }
+
+
+        @media (max-width: 768px) {
+            .nominations-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .category-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 10px;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        .stats-bar {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            border: 2px solid #3A6B9C;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #3A6B9C;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-container">
+                <img src="logo.png" alt="SASCE Logo" onerror="this.style.display='none'">
+            </div>
+            <h1>SASCE 2026-2027 Election</h1>
+            <p>Approved Nominations for Office Bearers</p>
+        </div>
+
+        <div id="statsBar" class="stats-bar" style="display: none;">
+            <div class="stat-item">
+                <span class="stat-value" id="totalCandidates">0</span>
+                <span class="stat-label">Total Candidates</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="totalPositions">0</span>
+                <span class="stat-label">Positions</span>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            <p>Loading nominations...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="content"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBWhxm7lJK9BUKsYqCFdoIUvLDl5tyssrQ",
+            authDomain: "facilio-app.firebaseapp.com",
+            projectId: "facilio-app",
+            storageBucket: "facilio-app.firebasestorage.app",
+            messagingSenderId: "515454562817",
+            appId: "1:515454562817:web:1f89da18665af2b67e0600",
+            measurementId: "G-981TTX1T68"
+        };
+
+        // Position display names
+        const positionNames = {
+            'president': 'President',
+            'deputy-president': 'Deputy President',
+            'general-secretary': 'General Secretary',
+            'deputy-general-secretary': 'Deputy Secretary',
+            'treasurer': 'Treasurer',
+            'deputy-treasurer': 'Deputy Treasurer'
+        };
+
+        // Position order for display
+        const positionOrder = [
+            'president',
+            'deputy-president',
+            'general-secretary',
+            'deputy-general-secretary',
+            'treasurer'
+        ];
+
+        // Position icons
+        const positionIcons = {
+            'president': 'fa-crown',
+            'deputy-president': 'fa-user-tie',
+            'general-secretary': 'fa-file-alt',
+            'deputy-general-secretary': 'fa-file-signature',
+            'treasurer': 'fa-dollar-sign',
+            'deputy-treasurer': 'fa-coins'
+        };
+
+        class NominationsViewer {
+            constructor() {
+                this.nominations = [];
+                this.initializeFirebase();
+            }
+
+            async initializeFirebase() {
+                try {
+                    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+                    const { getFirestore, collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                    
+                    this.app = initializeApp(firebaseConfig);
+                    this.db = getFirestore(this.app);
+                    
+                    await this.loadNominations();
+                } catch (error) {
+                    console.error('Error initializing Firebase:', error);
+                    this.showError('Failed to connect to the database. Please try again later.');
+                }
+            }
+
+            async loadNominations() {
+                try {
+                    const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+                    const nominationsRef = collection(this.db, 'nominations');
+                    
+                    const q = query(nominationsRef, orderBy('submittedAt', 'desc'));
+                    const querySnapshot = await getDocs(q);
+                    
+                    this.nominations = [];
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        
+                        // Only show nominations that are approved and accepted
+                        if (data.status === 'approved' && data.acceptanceStatus === 'Accepted') {
+                            this.nominations.push({
+                                id: doc.id,
+                                ...data
+                            });
+                        }
+                    });
+                    
+                    this.renderNominations();
+                } catch (error) {
+                    console.error('Error loading nominations:', error);
+                    this.showError('Failed to load nominations. Please refresh the page.');
+                }
+            }
+
+            showError(message) {
+                document.getElementById('loading').style.display = 'none';
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+
+            groupByPosition() {
+                const grouped = {};
+                this.nominations.forEach(nomination => {
+                    const position = nomination.positionNominated || 'other';
+                    if (!grouped[position]) {
+                        grouped[position] = [];
+                    }
+                    grouped[position].push(nomination);
+                });
+                return grouped;
+            }
+
+            formatPositionName(position) {
+                return positionNames[position] || position.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            }
+
+
+            renderNominations() {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (this.nominations.length === 0) {
+                    document.getElementById('content').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h2>No Approved Nominations</h2>
+                            <p>There are currently no approved and accepted nominations to display.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const grouped = this.groupByPosition();
+                
+                // Get all positions from grouped data
+                const allPositions = Object.keys(grouped);
+                
+                // Build positions array in the exact order specified
+                // Iterate through positionOrder and add positions that exist in the data
+                const positions = [];
+                positionOrder.forEach(pos => {
+                    if (allPositions.includes(pos)) {
+                        positions.push(pos);
+                    }
+                });
+                
+                // Add any other positions that exist but aren't in the order list
+                allPositions.forEach(pos => {
+                    if (!positionOrder.includes(pos) && !positions.includes(pos)) {
+                        positions.push(pos);
+                    }
+                });
+                
+                // Update stats
+                document.getElementById('totalCandidates').textContent = this.nominations.length;
+                document.getElementById('totalPositions').textContent = positions.length;
+                document.getElementById('statsBar').style.display = 'flex';
+
+                let html = '';
+                
+                positions.forEach(position => {
+                    const nominations = grouped[position];
+                    const positionName = this.formatPositionName(position);
+                    const icon = positionIcons[position] || 'fa-user';
+                    
+                    html += `
+                        <div class="category-section">
+                            <div class="category-header">
+                                <i class="fas ${icon}"></i>
+                                <h2>${positionName}</h2>
+                                <span class="category-count">${nominations.length} ${nominations.length === 1 ? 'Candidate' : 'Candidates'}</span>
+                            </div>
+                            <div class="nominations-grid">
+                                ${nominations.map(nomination => this.renderNominationCard(nomination)).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('content').innerHTML = html;
+            }
+
+            renderNominationCard(nomination) {
+                const fullName = `${nomination.firstName || ''} ${nomination.surname || ''}`.trim();
+                // Priority: profilePictureLink > profilePictureBase64 > placeholder
+                let photoSrc = 'https://via.placeholder.com/140?text=No+Photo';
+                if (nomination.profilePictureLink) {
+                    photoSrc = nomination.profilePictureLink;
+                } else if (nomination.profilePictureBase64) {
+                    photoSrc = `data:image/jpeg;base64,${nomination.profilePictureBase64}`;
+                }
+
+                const roleHtml = nomination.jobTitle ? `<div class="candidate-role">${nomination.jobTitle}</div>` : '';
+
+                return `
+                    <div class="nomination-card">
+                        <img src="${photoSrc}" alt="${fullName}" class="candidate-photo" onerror="this.src='https://via.placeholder.com/140?text=No+Photo'">
+                        <div class="candidate-name">${fullName}</div>
+                        ${roleHtml}
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize the viewer when the page loads
+        const viewer = new NominationsViewer();
+    </script>
+</body>
+</html>
+

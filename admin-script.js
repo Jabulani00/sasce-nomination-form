@@ -42,20 +42,40 @@ class AdminPanel {
 
     initializeEventListeners() {
         // Control buttons
-        document.getElementById('refreshBtn').addEventListener('click', () => this.loadNominations());
-        document.getElementById('exportExcelBtn').addEventListener('click', () => this.exportToExcel());
+        const refreshBtn = document.getElementById('refreshBtn');
+        if (refreshBtn) refreshBtn.addEventListener('click', () => this.loadNominations());
+        
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        if (exportExcelBtn) exportExcelBtn.addEventListener('click', () => this.exportToExcel());
         
         // Search and filters
-        document.getElementById('searchInput').addEventListener('input', () => this.filterNominations());
-        document.getElementById('positionFilter').addEventListener('change', () => this.filterNominations());
-        document.getElementById('statusFilter').addEventListener('change', () => this.filterNominations());
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.addEventListener('input', () => this.filterNominations());
+        
+        const positionFilter = document.getElementById('positionFilter');
+        if (positionFilter) positionFilter.addEventListener('change', () => this.filterNominations());
+        
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) statusFilter.addEventListener('change', () => this.filterNominations());
         
         // Modal controls
-        document.querySelector('.close').addEventListener('click', () => this.closeModal());
-        document.getElementById('closeModalBtn').addEventListener('click', () => this.closeModal());
-        document.getElementById('approveBtn').addEventListener('click', () => this.updateNominationStatus('approved'));
-        document.getElementById('rejectBtn').addEventListener('click', () => this.updateNominationStatus('rejected'));
-        document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNomination());
+        const closeBtn = document.querySelector('.close');
+        if (closeBtn) closeBtn.addEventListener('click', () => this.closeModal());
+        
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        if (closeModalBtn) closeModalBtn.addEventListener('click', () => this.closeModal());
+        
+        const approveBtn = document.getElementById('approveBtn');
+        if (approveBtn) approveBtn.addEventListener('click', () => this.updateNominationStatus('approved'));
+        
+        const rejectBtn = document.getElementById('rejectBtn');
+        if (rejectBtn) rejectBtn.addEventListener('click', () => this.updateNominationStatus('rejected'));
+        
+        const deleteBtn = document.getElementById('deleteBtn');
+        if (deleteBtn) deleteBtn.addEventListener('click', () => this.deleteNomination());
+        
+        const saveImageLinkBtn = document.getElementById('saveImageLinkBtn');
+        if (saveImageLinkBtn) saveImageLinkBtn.addEventListener('click', () => this.saveImageLink());
         
         // Close modal when clicking outside
         window.addEventListener('click', (event) => {
@@ -390,6 +410,16 @@ class AdminPanel {
                         <div class="detail-label">CV File</div>
                         <div class="detail-value">${nomination.cvBioFileName ? 'Uploaded: ' + nomination.cvBioFileName : 'N/A'}</div>
                     </div>
+                    <div class="detail-item" style="grid-column: 1 / -1;">
+                        <div class="detail-label">Profile Picture Link</div>
+                        <div class="detail-value">
+                            <input type="text" id="profilePictureLinkInput" placeholder="Enter image URL (e.g., https://example.com/image.jpg)" 
+                                   value="${nomination.profilePictureLink || ''}" 
+                                   style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">
+                            <small style="display: block; margin-top: 5px; color: #666;">This image will be displayed on the public nominations view page.</small>
+                            ${nomination.profilePictureLink ? `<div style="margin-top: 10px;"><img src="${nomination.profilePictureLink}" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; border: 1px solid #ddd;" onerror="this.style.display='none'"></div>` : ''}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -443,6 +473,53 @@ class AdminPanel {
         } catch (error) {
             console.error('Error updating nomination status:', error);
             this.showError('Failed to update nomination status. Please try again.');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async saveImageLink() {
+        if (!this.currentNomination) return;
+        
+        const imageLinkInput = document.getElementById('profilePictureLinkInput');
+        if (!imageLinkInput) return;
+        
+        const imageLink = imageLinkInput.value.trim();
+        
+        // Validate URL format (basic check)
+        if (imageLink && !imageLink.match(/^https?:\/\/.+/)) {
+            this.showError('Please enter a valid URL starting with http:// or https://');
+            return;
+        }
+        
+        this.showLoading(true);
+        
+        try {
+            const { getFirestore, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const db = getFirestore();
+            const nominationRef = doc(db, 'nominations', this.currentNomination.id);
+            
+            const updateData = {
+                profilePictureLink: imageLink || null,
+                updatedAt: new Date()
+            };
+            
+            await updateDoc(nominationRef, updateData);
+            
+            // Update local data
+            this.currentNomination.profilePictureLink = imageLink || null;
+            const index = this.nominations.findIndex(n => n.id === this.currentNomination.id);
+            if (index !== -1) {
+                this.nominations[index].profilePictureLink = imageLink || null;
+            }
+            
+            // Refresh the modal to show updated image
+            this.showNominationDetails(this.currentNomination);
+            this.showSuccess('Image link saved successfully!');
+            
+        } catch (error) {
+            console.error('Error saving image link:', error);
+            this.showError('Failed to save image link. Please try again.');
         } finally {
             this.showLoading(false);
         }
