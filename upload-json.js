@@ -31,7 +31,8 @@
             state.valid = false;
             validationBox.style.display = 'none';
             resultsSection.style.display = 'none';
-            submitBtn.disabled = true;
+            // Enable submit button when file is selected (validation bypassed)
+            submitBtn.disabled = !fileInput.files || fileInput.files.length === 0;
             validateBtn.disabled = !fileInput.files || fileInput.files.length === 0;
 
             if (fileInput.files && fileInput.files[0]) {
@@ -65,13 +66,31 @@
         });
 
         submitBtn.addEventListener('click', async () => {
-            if (!state.valid || !state.parsed) return;
+            if (!fileInput.files || !fileInput.files[0]) return;
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
             resultsSection.style.display = 'none';
 
             try {
-                const outcome = await saveAllToFirestore(state.parsed);
+                // Parse JSON directly without validation
+                const text = await fileInput.files[0].text();
+                const json = JSON.parse(text);
+                const entries = Array.isArray(json) ? json : [json];
+                
+                // Clean entries (remove undefined, functions, File objects) but skip validation
+                const cleaned = entries.map(e => {
+                    const safe = {};
+                    Object.keys(e || {}).forEach(k => {
+                        const v = e[k];
+                        if (v === undefined) return;
+                        if (typeof v === 'function') return;
+                        if (v && typeof File !== 'undefined' && v instanceof File) return;
+                        safe[k] = v;
+                    });
+                    return safe;
+                });
+                
+                const outcome = await saveAllToFirestore(cleaned);
                 const successCount = outcome.filter(x => x.ok).length;
                 const errorCount = outcome.length - successCount;
                 const linksHtml = outcome
@@ -184,12 +203,11 @@
                 "email": "",
                 "phone": "",
                 "jobTitle": "",
-                "membershipNumber": "",
+                "membershipNumber": [""], // Array for professional membership numbers (used with membershipInstitution and membershipDesignation)
                 "cvBioText": "", // or provide cvBioLink instead
                 "cvBioLink": "",
                 "membershipInstitution": [""],
                 "membershipDesignation": [""],
-                "membershipNumber": [""],
                 "qualificationName": [""],
                 "qualificationInstitution": [""],
                 "qualificationYear": [""],
@@ -204,7 +222,9 @@
                 "wilHostExperience": "none",
                 "ceWilSponsorExperience": "none",
                 "volunteerBeneficiaryDuration": "upto6",
-                "internshipWilDuration": "upto6"
+                "internshipWilDuration": "upto6",
+                "profilePictureBase64": "", // Optional: base64 encoded image (data:image/jpeg;base64,...)
+                "note": "Uploaded nominations are automatically approved with status='approved' and acceptanceStatus='Accepted'"
             }
         ];
     }
@@ -223,11 +243,10 @@
             email: "john.smith@example.com",
             phone: "+27 82 111 1111",
             jobTitle: "Senior Officer / Company X",
-            membershipNumber: "Company X / 998877",
+            membershipNumber: ["Company X / 998877", "A-5566"], // Array for professional membership numbers
             cvBioText: "Experienced CE leader with a focus on WIL initiatives.",
             membershipInstitution: ["Association A"],
             membershipDesignation: ["Fellow"],
-            membershipNumber: ["A-5566"],
             qualificationName: ["BSc Education"],
             qualificationInstitution: ["University A"],
             qualificationYear: ["2015"],
@@ -288,7 +307,8 @@
         }
 
         clean.submittedAt = new Date();
-        clean.status = 'pending';
+        clean.status = 'approved'; // Auto-approve uploaded nominations
+        clean.acceptanceStatus = 'Accepted'; // Auto-accept uploaded nominations
         clean.acceptanceToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
         Object.keys(clean).forEach(k => {

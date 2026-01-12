@@ -55,6 +55,7 @@ class AdminPanel {
         document.getElementById('closeModalBtn').addEventListener('click', () => this.closeModal());
         document.getElementById('approveBtn').addEventListener('click', () => this.updateNominationStatus('approved'));
         document.getElementById('rejectBtn').addEventListener('click', () => this.updateNominationStatus('rejected'));
+        document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNomination());
         
         // Close modal when clicking outside
         window.addEventListener('click', (event) => {
@@ -164,6 +165,9 @@ class AdminPanel {
                     <div class="action-buttons">
                         <button class="btn btn-primary" onclick="adminPanel.viewNomination('${nomination.id}')">
                             <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-danger" onclick="adminPanel.deleteNomination('${nomination.id}')" style="background-color: #dc3545; margin-left: 5px;">
+                            <i class="fas fa-trash"></i> Delete
                         </button>
                     </div>
                 </td>
@@ -439,6 +443,49 @@ class AdminPanel {
         } catch (error) {
             console.error('Error updating nomination status:', error);
             this.showError('Failed to update nomination status. Please try again.');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async deleteNomination(nominationId) {
+        // If called from table, use the provided ID; otherwise use current nomination
+        const idToDelete = nominationId || (this.currentNomination?.id);
+        if (!idToDelete) return;
+        
+        // Confirm deletion
+        const nomination = this.nominations.find(n => n.id === idToDelete);
+        const nomineeName = nomination ? `${nomination.firstName} ${nomination.surname}` : 'this nomination';
+        
+        if (!confirm(`Are you sure you want to delete ${nomineeName}? This action cannot be undone.`)) {
+            return;
+        }
+        
+        this.showLoading(true);
+        
+        try {
+            const { getFirestore, doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const db = getFirestore();
+            const nominationRef = doc(db, 'nominations', idToDelete);
+            
+            await deleteDoc(nominationRef);
+            
+            // Remove from local data
+            this.nominations = this.nominations.filter(n => n.id !== idToDelete);
+            this.filteredNominations = this.filteredNominations.filter(n => n.id !== idToDelete);
+            
+            // If we deleted the current nomination, close modal
+            if (this.currentNomination && this.currentNomination.id === idToDelete) {
+                this.closeModal();
+            }
+            
+            this.filterNominations();
+            this.updateStatistics();
+            this.showSuccess('Nomination deleted successfully!');
+            
+        } catch (error) {
+            console.error('Error deleting nomination:', error);
+            this.showError('Failed to delete nomination. Please try again.');
         } finally {
             this.showLoading(false);
         }
