@@ -77,6 +77,9 @@ class AdminPanel {
         const saveImageLinkBtn = document.getElementById('saveImageLinkBtn');
         if (saveImageLinkBtn) saveImageLinkBtn.addEventListener('click', () => this.saveImageLink());
         
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        if (saveChangesBtn) saveChangesBtn.addEventListener('click', () => this.saveModalEdits());
+        
         // Close modal when clicking outside
         window.addEventListener('click', (event) => {
             const modal = document.getElementById('nominationModal');
@@ -367,11 +370,19 @@ class AdminPanel {
             </div>
 
             <div class="detail-section">
-                <h4><i class="fas fa-user-tie"></i> Nominator Information</h4>
+                <h4><i class="fas fa-user-tie"></i> Nominator Information (editable)</h4>
                 <div class="detail-grid">
                     <div class="detail-item">
-                        <div class="detail-label">Nominator Name</div>
-                        <div class="detail-value">${nomination.nominatorFirstName} ${nomination.nominatorSurname}</div>
+                        <div class="detail-label">Nominator First Name</div>
+                        <div class="detail-value">
+                            <input type="text" id="modalNominatorFirstName" value="${(nomination.nominatorFirstName || '').replace(/"/g, '&quot;')}" placeholder="First name" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Nominator Surname</div>
+                        <div class="detail-value">
+                            <input type="text" id="modalNominatorSurname" value="${(nomination.nominatorSurname || '').replace(/"/g, '&quot;')}" placeholder="Surname" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Nominator Organization</div>
@@ -384,7 +395,11 @@ class AdminPanel {
                     <div class="detail-item">
                         <div class="detail-label">Acceptance Status</div>
                         <div class="detail-value">
-                            ${(() => { const acc = nomination.acceptanceStatus || 'Pending'; const cls = acc === 'Accepted' ? 'accepted' : (acc === 'Denied' ? 'rejected' : 'pending'); return `<span class=\"status-badge status-${cls}\">${acc}</span>`; })()}
+                            <select id="modalAcceptanceStatus" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 140px;">
+                                <option value="Pending" ${(nomination.acceptanceStatus || 'Pending') === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Accepted" ${nomination.acceptanceStatus === 'Accepted' ? 'selected' : ''}>Accepted</option>
+                                <option value="Denied" ${nomination.acceptanceStatus === 'Denied' ? 'selected' : ''}>Denied</option>
+                            </select>
                             ${(!nomination.acceptanceStatus || nomination.acceptanceStatus === 'Pending') ? `<button class=\"btn btn-secondary\" style=\"margin-left:8px\" onclick=\"adminPanel.copyAcceptanceLink('${nomination.id}')\"><i class=\"fas fa-link\"></i> Copy Link</button>` : ''}
                         </div>
                     </div>
@@ -424,11 +439,17 @@ class AdminPanel {
             </div>
 
             <div class="detail-section">
-                <h4><i class="fas fa-info-circle"></i> Submission Details</h4>
+                <h4><i class="fas fa-info-circle"></i> Submission Details (editable)</h4>
                 <div class="detail-grid">
                     <div class="detail-item">
                         <div class="detail-label">Status</div>
-                        <div class="detail-value"><span class="status-badge status-${nomination.status || 'pending'}">${nomination.status || 'pending'}</span></div>
+                        <div class="detail-value">
+                            <select id="modalStatus" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 140px;">
+                                <option value="pending" ${(nomination.status || 'pending') === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="approved" ${nomination.status === 'approved' ? 'selected' : ''}>Approved</option>
+                                <option value="rejected" ${nomination.status === 'rejected' ? 'selected' : ''}>Rejected</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">Submitted At</div>
@@ -473,6 +494,63 @@ class AdminPanel {
         } catch (error) {
             console.error('Error updating nomination status:', error);
             this.showError('Failed to update nomination status. Please try again.');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async saveModalEdits() {
+        if (!this.currentNomination) return;
+
+        const statusSelect = document.getElementById('modalStatus');
+        const acceptanceSelect = document.getElementById('modalAcceptanceStatus');
+        const nominatorFirstNameInput = document.getElementById('modalNominatorFirstName');
+        const nominatorSurnameInput = document.getElementById('modalNominatorSurname');
+
+        if (!statusSelect || !acceptanceSelect || !nominatorFirstNameInput || !nominatorSurnameInput) {
+            this.showError('Could not find edit fields.');
+            return;
+        }
+
+        const newStatus = statusSelect.value;
+        const newAcceptanceStatus = acceptanceSelect.value;
+        const newNominatorFirstName = nominatorFirstNameInput.value.trim();
+        const newNominatorSurname = nominatorSurnameInput.value.trim();
+
+        this.showLoading(true);
+
+        try {
+            const { getFirestore, doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+            const db = getFirestore();
+            const nominationRef = doc(db, 'nominations', this.currentNomination.id);
+
+            const updateData = {
+                status: newStatus,
+                acceptanceStatus: newAcceptanceStatus,
+                nominatorFirstName: newNominatorFirstName || this.currentNomination.nominatorFirstName || '',
+                nominatorSurname: newNominatorSurname || this.currentNomination.nominatorSurname || '',
+                updatedAt: new Date()
+            };
+
+            await updateDoc(nominationRef, updateData);
+
+            this.currentNomination.status = newStatus;
+            this.currentNomination.acceptanceStatus = newAcceptanceStatus;
+            this.currentNomination.nominatorFirstName = updateData.nominatorFirstName;
+            this.currentNomination.nominatorSurname = updateData.nominatorSurname;
+
+            const index = this.nominations.findIndex(n => n.id === this.currentNomination.id);
+            if (index !== -1) {
+                this.nominations[index] = { ...this.nominations[index], ...updateData };
+            }
+
+            this.filterNominations();
+            this.updateStatistics();
+            this.showNominationDetails(this.currentNomination);
+            this.showSuccess('Status, Acceptance Status and Nominator saved successfully!');
+        } catch (error) {
+            console.error('Error saving modal edits:', error);
+            this.showError('Failed to save changes. Please try again.');
         } finally {
             this.showLoading(false);
         }
