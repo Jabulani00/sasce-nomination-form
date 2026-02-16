@@ -216,6 +216,40 @@
       </div>
     </section>
 
+    <section class="voting-control-section" id="copyLinksSection" style="display:none;">
+      <div class="section-header">
+        <h2><i class="fas fa-link"></i> Copy voting links</h2>
+        <p>Copy tailored links to send manually to people who didn't receive their email</p>
+      </div>
+      <div class="form-actions" style="margin-bottom:15px;">
+        <button id="copyPendingFailedBtn" class="btn btn-primary">
+          <i class="fas fa-copy"></i> Copy links for Pending & Failed only
+        </button>
+        <button id="copyAllLinksBtn" class="btn btn-secondary">
+          <i class="fas fa-copy"></i> Copy all voting links
+        </button>
+        <button id="toggleLinksTableBtn" class="btn btn-secondary">
+          <i class="fas fa-list"></i> Show / hide list
+        </button>
+      </div>
+      <div id="votingLinksTableWrap" style="display:none;">
+        <div class="email-preview" style="max-height:400px; overflow:auto;">
+          <table id="votingLinksTable" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#e8f4fd; position:sticky; top:0;">
+                <th style="padding:10px; text-align:left; border:1px solid #e5e7eb;">Name</th>
+                <th style="padding:10px; text-align:left; border:1px solid #e5e7eb;">Email</th>
+                <th style="padding:10px; text-align:left; border:1px solid #e5e7eb;">Status</th>
+                <th style="padding:10px; text-align:left; border:1px solid #e5e7eb;">Voting link</th>
+                <th style="padding:10px; border:1px solid #e5e7eb;"></th>
+              </tr>
+            </thead>
+            <tbody id="votingLinksTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
     <div id="loadingOverlay" class="loading-overlay" style="display:none;">
       <div class="loading-content">
         <i class="fas fa-spinner fa-spin"></i>
@@ -382,6 +416,8 @@
         $("statsSection").style.display = 'block';
         $("emailPreviewSection").style.display = 'block';
         $("sendSection").style.display = 'block';
+        $("copyLinksSection").style.display = 'block';
+        buildVotingLinksTable();
         
       } catch (e) {
         console.error('Error loading voters:', e);
@@ -407,6 +443,93 @@
       // Generate a unique token for the voter
       const data = `${voter.email}${selectedPosition}${voter.organization}`;
       return btoa(data).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+    }
+
+    function getVotingLinkForVoter(voter) {
+      const token = generateUniqueToken(voter);
+      return `https://sasce-nomination-form.vercel.app/ballot.html?token=${token}&position=${selectedPosition}`;
+    }
+
+    function buildVotingLinksTable() {
+      const tbody = $("votingLinksTableBody");
+      if (!tbody || !approvedVoters.length) return;
+      tbody.innerHTML = '';
+      approvedVoters.forEach(voter => {
+        const status = emailStatus.get(voter.email) || 'pending';
+        const link = getVotingLinkForVoter(voter);
+        const statusClass = status === 'sent' ? 'color:#16a34a' : status === 'failed' ? 'color:#dc2626' : 'color:#b45309';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:10px; border:1px solid #e5e7eb;">${escapeHtml(voter.name)}</td>
+          <td style="padding:10px; border:1px solid #e5e7eb;">${escapeHtml(voter.email)}</td>
+          <td style="padding:10px; border:1px solid #e5e7eb; ${statusClass}">${status}</td>
+          <td style="padding:10px; border:1px solid #e5e7eb; font-size:0.85em; word-break:break-all;">${escapeHtml(link)}</td>
+          <td style="padding:10px; border:1px solid #e5e7eb;">
+            <button type="button" class="btn btn-secondary copy-one-link" data-link="${link.replace(/"/g, '&quot;')}" style="padding:6px 12px; font-size:0.9rem;"><i class="fas fa-copy"></i> Copy</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      tbody.querySelectorAll('.copy-one-link').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const link = btn.getAttribute('data-link');
+          copyToClipboard(link).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = orig; }, 1500);
+          });
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function copyToClipboard(text) {
+      return navigator.clipboard.writeText(text);
+    }
+
+    function getLinksText(voters, forResend) {
+      return voters.map(v => {
+        const link = getVotingLinkForVoter(v);
+        const status = emailStatus.get(v.email) || 'pending';
+        if (forResend) {
+          return `Name: ${v.name}\nEmail: ${v.email}\nVoting link: ${link}`;
+        }
+        return `${v.name}\t${v.email}\t${status}\t${link}`;
+      }).join('\n\n---\n\n');
+    }
+
+    async function copyPendingFailedLinks() {
+      const pendingFailed = approvedVoters.filter(v => (emailStatus.get(v.email) || 'pending') !== 'sent');
+      if (!pendingFailed.length) {
+        alert('There are no pending or failed voters. All links have been sent.');
+        return;
+      }
+      const text = getLinksText(pendingFailed, true);
+      try {
+        await copyToClipboard(text);
+        alert(`Copied ${pendingFailed.length} voting link(s) for pending/failed recipients. You can paste into WhatsApp or email to resend.`);
+      } catch (e) {
+        alert('Could not copy to clipboard. Use the list below to copy each link.');
+      }
+    }
+
+    async function copyAllLinks() {
+      if (!approvedVoters.length) {
+        alert('No voters loaded.');
+        return;
+      }
+      const text = getLinksText(approvedVoters, false);
+      try {
+        await copyToClipboard(text);
+        alert(`Copied all ${approvedVoters.length} voting link(s).`);
+      } catch (e) {
+        alert('Could not copy to clipboard. Use the list below to copy each link.');
+      }
     }
 
     async function sendTestEmail() {
@@ -551,6 +674,7 @@
       
       loadingOverlay.style.display = 'none';
       updateStats();
+      buildVotingLinksTable();
       
       const finalStats = {
         sent: Array.from(emailStatus.values()).filter(s => s === 'sent').length,
@@ -611,11 +735,20 @@
       });
     }
 
+    // Toggle links table visibility
+    $("toggleLinksTableBtn").addEventListener('click', () => {
+      const wrap = $("votingLinksTableWrap");
+      wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+      $("toggleLinksTableBtn").innerHTML = wrap.style.display === 'none' ? '<i class="fas fa-list"></i> Show / hide list' : '<i class="fas fa-list"></i> Hide list';
+    });
+
     // Event listeners for buttons
     $("sendEmailsBtn").addEventListener('click', sendEmailsToAll);
     $("testEmailBtn").addEventListener('click', sendTestEmail);
     $("openVotingBtn").addEventListener('click', () => setPositionOpen(true));
     $("closeVotingBtn").addEventListener('click', () => setPositionOpen(false));
+    $("copyPendingFailedBtn").addEventListener('click', copyPendingFailedLinks);
+    $("copyAllLinksBtn").addEventListener('click', copyAllLinks);
   </script>
 </body>
 </html>

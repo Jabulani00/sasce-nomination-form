@@ -11,12 +11,32 @@ class BallotSystem {
             'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="none" stroke="%233A6B9C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>';
         this.positions = [
             'president',
-            'deputy-president', 
+            'deputy-president',
             'general-secretary',
             'deputy-general-secretary',
             'treasurer',
             'deputy-treasurer'
         ];
+        // Map display names / alternate slugs to canonical position id (for Firestore data compatibility)
+        this.positionNormalizeMap = {
+            'president': 'president',
+            'deputy-president': 'deputy-president',
+            'deputy president': 'deputy-president',
+            'deputy_president': 'deputy-president',
+            'general-secretary': 'general-secretary',
+            'general secretary': 'general-secretary',
+            'general_secretary': 'general-secretary',
+            'General Secretary': 'general-secretary',
+            'deputy-general-secretary': 'deputy-general-secretary',
+            'deputy general secretary': 'deputy-general-secretary',
+            'deputy_general_secretary': 'deputy-general-secretary',
+            'Deputy General Secretary': 'deputy-general-secretary',
+            'treasurer': 'treasurer',
+            'deputy-treasurer': 'deputy-treasurer',
+            'deputy treasurer': 'deputy-treasurer',
+            'deputy_treasurer': 'deputy-treasurer',
+            'Deputy Treasurer': 'deputy-treasurer'
+        };
         this.tokenData = null;
         this.restrictedPosition = null;
         this.openPositions = {};
@@ -193,10 +213,14 @@ class BallotSystem {
                 
                 // Show only candidates approved by admin and accepted by nominee
                 if (data.status === 'approved' && data.acceptanceStatus === 'Accepted') {
+                    const positionId = this.normalizePositionId(data.positionNominated);
+                    if (!positionId || !this.positions.includes(positionId)) {
+                        console.warn('Unknown position for nomination', doc.id, data.positionNominated);
+                    }
                     this.candidates.push({
                         id: doc.id,
                         candidateName: `${data.firstName} ${data.surname}`,
-                        position: data.positionNominated,
+                        position: positionId || String(data.positionNominated || '').toLowerCase().replace(/\s+/g, '-'),
                         organization: String(data.organization || data.membershipNumber || ''),
                         jobTitle: data.jobTitle,
                         currentRoles: data.currentRoles,
@@ -227,10 +251,12 @@ class BallotSystem {
         this.positions.forEach(position => {
             const container = document.getElementById(`${position}-candidates`);
             const section = document.getElementById(`${position}-section`);
-            
+            if (!container) {
+                console.warn('Ballot: missing container for position', position);
+                return;
+            }
             // Always show all sections
             if (section) section.style.display = '';
-            
             const positionCandidates = this.candidates.filter(c => c.position === position);
             
             if (positionCandidates.length === 0) {
@@ -519,6 +545,14 @@ class BallotSystem {
         `;
         
         form.insertBefore(successMessage, form.firstChild);
+    }
+
+    normalizePositionId(positionNominated) {
+        if (!positionNominated) return null;
+        const s = String(positionNominated).trim();
+        if (this.positionNormalizeMap[s]) return this.positionNormalizeMap[s];
+        const lower = s.toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-');
+        return this.positionNormalizeMap[lower] || (this.positions.includes(lower) ? lower : null);
     }
 
     formatPositionName(position) {

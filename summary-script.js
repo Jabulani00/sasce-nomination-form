@@ -5,14 +5,41 @@ class ElectionSummary {
         this.voters = [];
         this.positions = [
             'president',
-            'deputy-president', 
+            'deputy-president',
             'general-secretary',
             'deputy-general-secretary',
             'treasurer',
             'deputy-treasurer'
         ];
+        this.positionNormalizeMap = {
+            'president': 'president',
+            'deputy-president': 'deputy-president',
+            'deputy president': 'deputy-president',
+            'deputy_president': 'deputy-president',
+            'general-secretary': 'general-secretary',
+            'general secretary': 'general-secretary',
+            'general_secretary': 'general-secretary',
+            'General Secretary': 'general-secretary',
+            'deputy-general-secretary': 'deputy-general-secretary',
+            'deputy general secretary': 'deputy-general-secretary',
+            'deputy_general_secretary': 'deputy-general-secretary',
+            'Deputy General Secretary': 'deputy-general-secretary',
+            'treasurer': 'treasurer',
+            'deputy-treasurer': 'deputy-treasurer',
+            'deputy treasurer': 'deputy-treasurer',
+            'deputy_treasurer': 'deputy-treasurer',
+            'Deputy Treasurer': 'deputy-treasurer'
+        };
         this.initializeEventListeners();
         this.loadElectionData();
+    }
+
+    normalizePositionId(positionNominated) {
+        if (!positionNominated) return null;
+        const s = String(positionNominated).trim();
+        if (this.positionNormalizeMap[s]) return this.positionNormalizeMap[s];
+        const lower = s.toLowerCase().replace(/_/g, '-').replace(/\s+/g, '-');
+        return this.positionNormalizeMap[lower] || (this.positions.includes(lower) ? lower : null);
     }
 
     initializeEventListeners() {
@@ -64,10 +91,11 @@ class ElectionSummary {
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             if (data.status === 'approved' && data.acceptanceStatus === 'Accepted') {
+                const positionId = this.normalizePositionId(data.positionNominated) || data.positionNominated;
                 this.candidates.push({
                     id: doc.id,
                     candidateName: `${data.firstName} ${data.surname}`,
-                    position: data.positionNominated,
+                    position: positionId,
                     organization: data.membershipNumber,
                     jobTitle: data.jobTitle,
                     profilePictureBase64: data.profilePictureBase64,
