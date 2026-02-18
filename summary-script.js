@@ -191,33 +191,74 @@ class ElectionSummary {
         });
     }
 
+    renderVoterCard(voter) {
+        const votesHtml = this.getVotesDisplayForVoter(voter);
+        const voteCount = voter.votes ? Object.keys(voter.votes).length : 0;
+        return `
+            <details class="voter-card" data-voter-id="${voter.id || ''}">
+                <summary class="voter-card__summary">
+                    <span class="voter-card__avatar"><i class="fas fa-user"></i></span>
+                    <div class="voter-card__primary">
+                        <span class="voter-card__name">${this.escapeHtml(voter.voterName)}</span>
+                        <span class="voter-card__meta">${this.escapeHtml(voter.voterEmail)} · ${this.escapeHtml(voter.voterMembership)}</span>
+                    </div>
+                    <span class="voter-card__badge vote-status voted">Voted</span>
+                    <span class="voter-card__votes-count">${voteCount} vote${voteCount !== 1 ? 's' : ''}</span>
+                    <i class="voter-card__chevron fas fa-chevron-down" aria-hidden="true"></i>
+                </summary>
+                <div class="voter-card__expandable">
+                    <div class="voter-card__info-grid">
+                        <div class="voter-card__info-item">
+                            <span class="voter-card__info-label">Email</span>
+                            <span class="voter-card__info-value">${this.escapeHtml(voter.voterEmail)}</span>
+                        </div>
+                        <div class="voter-card__info-item">
+                            <span class="voter-card__info-label">Membership</span>
+                            <span class="voter-card__info-value">${this.escapeHtml(voter.voterMembership)}</span>
+                        </div>
+                        <div class="voter-card__info-item">
+                            <span class="voter-card__info-label">Voted at</span>
+                            <span class="voter-card__info-value">${this.formatDate(voter.submittedAt)}</span>
+                        </div>
+                        <div class="voter-card__info-item">
+                            <span class="voter-card__info-label">IP Address</span>
+                            <span class="voter-card__info-value">${voter.ipAddress || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="voter-card__votes-section">
+                        <h4 class="voter-card__votes-title"><i class="fas fa-vote-yea"></i> Who they voted for</h4>
+                        <div class="voter-card__votes-content">${votesHtml}</div>
+                    </div>
+                </div>
+            </details>
+        `;
+    }
+
+    escapeHtml(text) {
+        if (text == null) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     renderVotersTable() {
-        const tbody = document.getElementById('votersTableBody');
+        const container = document.getElementById('votersListBody');
+        const loadingEl = document.getElementById('votersLoadingState');
+        
+        if (loadingEl) loadingEl.style.display = 'none';
         
         if (this.voters.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="loading-row">
-                        <i class="fas fa-inbox"></i>
-                        <h3>No voters found</h3>
-                        <p>No votes have been cast yet.</p>
-                    </td>
-                </tr>
+            container.innerHTML = `
+                <div class="voters-empty">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No voters found</h3>
+                    <p>No votes have been cast yet.</p>
+                </div>
             `;
             return;
         }
         
-        tbody.innerHTML = this.voters.map(voter => `
-            <tr>
-                <td>${voter.voterName}</td>
-                <td>${voter.voterEmail}</td>
-                <td>${voter.voterMembership}</td>
-                <td class="votes-cast-cell">${this.getVotesDisplayForVoter(voter)}</td>
-                <td><span class="vote-status voted">Voted</span></td>
-                <td>${this.formatDate(voter.submittedAt)}</td>
-                <td>${voter.ipAddress || 'N/A'}</td>
-            </tr>
-        `).join('');
+        container.innerHTML = this.voters.map(voter => this.renderVoterCard(voter)).join('');
     }
 
     filterVoters() {
@@ -228,7 +269,7 @@ class ElectionSummary {
             const matchesSearch = !searchTerm || 
                 voter.voterName.toLowerCase().includes(searchTerm) ||
                 voter.voterEmail.toLowerCase().includes(searchTerm) ||
-                voter.voterMembership.toLowerCase().includes(searchTerm);
+                (voter.voterMembership && voter.voterMembership.toLowerCase().includes(searchTerm));
             
             const matchesFilter = !filterValue || 
                 (filterValue === 'voted' && voter.votes) ||
@@ -237,18 +278,22 @@ class ElectionSummary {
             return matchesSearch && matchesFilter;
         });
         
-        const tbody = document.getElementById('votersTableBody');
-        tbody.innerHTML = filteredVoters.map(voter => `
-            <tr>
-                <td>${voter.voterName}</td>
-                <td>${voter.voterEmail}</td>
-                <td>${voter.voterMembership}</td>
-                <td class="votes-cast-cell">${this.getVotesDisplayForVoter(voter)}</td>
-                <td><span class="vote-status voted">Voted</span></td>
-                <td>${this.formatDate(voter.submittedAt)}</td>
-                <td>${voter.ipAddress || 'N/A'}</td>
-            </tr>
-        `).join('');
+        const container = document.getElementById('votersListBody');
+        const loadingEl = document.getElementById('votersLoadingState');
+        if (loadingEl) loadingEl.style.display = 'none';
+        
+        if (filteredVoters.length === 0) {
+            container.innerHTML = `
+                <div class="voters-empty">
+                    <i class="fas fa-search"></i>
+                    <h3>No matching voters</h3>
+                    <p>Try adjusting your search or filter.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = filteredVoters.map(voter => this.renderVoterCard(voter)).join('');
     }
 
     exportVoters() {
