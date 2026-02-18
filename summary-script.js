@@ -197,7 +197,7 @@ class ElectionSummary {
         if (this.voters.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="loading-row">
+                    <td colspan="7" class="loading-row">
                         <i class="fas fa-inbox"></i>
                         <h3>No voters found</h3>
                         <p>No votes have been cast yet.</p>
@@ -212,6 +212,7 @@ class ElectionSummary {
                 <td>${voter.voterName}</td>
                 <td>${voter.voterEmail}</td>
                 <td>${voter.voterMembership}</td>
+                <td class="votes-cast-cell">${this.getVotesDisplayForVoter(voter)}</td>
                 <td><span class="vote-status voted">Voted</span></td>
                 <td>${this.formatDate(voter.submittedAt)}</td>
                 <td>${voter.ipAddress || 'N/A'}</td>
@@ -242,6 +243,7 @@ class ElectionSummary {
                 <td>${voter.voterName}</td>
                 <td>${voter.voterEmail}</td>
                 <td>${voter.voterMembership}</td>
+                <td class="votes-cast-cell">${this.getVotesDisplayForVoter(voter)}</td>
                 <td><span class="vote-status voted">Voted</span></td>
                 <td>${this.formatDate(voter.submittedAt)}</td>
                 <td>${voter.ipAddress || 'N/A'}</td>
@@ -255,15 +257,23 @@ class ElectionSummary {
             return;
         }
         
-        const excelData = this.voters.map(voter => ({
-            'Voter Name': voter.voterName,
-            'Email': voter.voterEmail,
-            'Membership': voter.voterMembership,
-            'Vote Status': 'Voted',
-            'Voted At': this.formatDate(voter.submittedAt),
-            'IP Address': voter.ipAddress || 'N/A',
-            'Votes Cast': Object.keys(voter.votes).length
-        }));
+        const excelData = this.voters.map(voter => {
+            const votes = voter.votes || {};
+            const whoVotedFor = this.positions
+                .filter(pos => votes[pos])
+                .map(pos => `${this.formatPositionName(pos)}: ${this.getCandidateNameById(votes[pos])}`)
+                .join('; ') || 'No votes cast';
+            return {
+                'Voter Name': voter.voterName,
+                'Email': voter.voterEmail,
+                'Membership': voter.voterMembership,
+                'Who They Voted For': whoVotedFor,
+                'Vote Status': 'Voted',
+                'Voted At': this.formatDate(voter.submittedAt),
+                'IP Address': voter.ipAddress || 'N/A',
+                'Votes Cast': Object.keys(votes).length
+            };
+        });
         
         this.exportToExcel(excelData, 'SASCE_Voters');
     }
@@ -315,6 +325,28 @@ class ElectionSummary {
             'deputy-treasurer': 'Deputy Treasurer'
         };
         return positionMap[position] || position;
+    }
+
+    getCandidateNameById(candidateId) {
+        if (!candidateId) return '—';
+        const candidate = this.candidates.find(c => c.id === candidateId);
+        return candidate ? candidate.candidateName : 'Unknown';
+    }
+
+    getVotesDisplayForVoter(voter) {
+        const votes = voter.votes || {};
+        if (Object.keys(votes).length === 0) {
+            return '<span class="no-votes">No votes cast</span>';
+        }
+        const items = this.positions
+            .filter(pos => votes[pos])
+            .map(pos => {
+                const name = this.getCandidateNameById(votes[pos]);
+                const positionLabel = this.formatPositionName(pos);
+                return `<li class="vote-chip"><span class="vote-position">${positionLabel}</span><span class="vote-candidate">${name}</span></li>`;
+            });
+        if (items.length === 0) return '<span class="no-votes">No votes cast</span>';
+        return '<ul class="voter-votes-list">' + items.join('') + '</ul>';
     }
 
     formatDate(timestamp) {
